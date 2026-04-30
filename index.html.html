@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMR STORE ABSENSI | SITE</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* ========== ROOT & RESET (SAMA PERSIS DENGAN ASLI) ========== */
+        :root {
+            --p: #dc2626;
+            --s: #16a34a;
+            --d: #ef4444;
+            --w: #f59e0b;
+            --bg: #0a0a0a;
+            --card-bg: #141414;
+            --text: #ededed;
+            --text-dim: #9ca3af;
+            --border: #2a2a2a;
+            --input-bg: #1f1f1f;
+            --sidebar-bg: #0d0d0d;
+        }
+        body {
+            background: var(--bg);
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+        }
+        
+        /* ========== LAYOUT UTAMA ========== */
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .sidebar-header h3 {
+            color: var(--p);
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .sidebar-header p {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin: 5px 0 0;
+        }
+        .nav-menu {
+            padding: 15px 0;
+        }
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            color: var(--text-dim);
+            transition: 0.2s;
+        }
+        .nav-item:hover {
+            background: rgba(220,38,38,0.1);
+            color: var(--text);
+        }
+        .nav-item.active {
+            background: rgba(220,38,38,0.15);
+            border-left-color: var(--p);
+            color: var(--p);
+        }
+        .nav-item .nav-icon { font-size: 1.2rem; width: 24px; text-align: center; }
+        .nav-item .nav-text { font-size: 0.85rem; font-weight: 500; }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 20px;
+            max-width: calc(100% - 260px);
+        }
+        .tab-content { display: none; }
+        .tab-content.active-tab { display: block; }
+        
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            border: none;
+            cursor: pointer;
+            background: #2a2a2a;
+            color: white;
+            transition: 0.1s;
+        }
+        button:active { transform: scale(0.97); }
+        .btn-primary { background: #dc2626; }
+        .btn-success { background: #16a34a; }
+        .btn-danger { background: #b91c1c; }
+        .btn-secondary { background: #374151; }
+        
+        input, select, textarea {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #dc2626;
+            outline: none;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        th, td {
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+        th { color: #dc2626; font-weight: 500; }
+        
+        .penalti-item {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            margin: 2px 4px;
+        }
+        .penalti-ringan { background: #f59e0b20; color: #fbbf24; border: 1px solid #f59e0b; }
+        .penalti-sedang { background: #f9731620; color: #fdba74; border: 1px solid #f97316; }
+        .penalti-berat { background: #ef444420; color: #fca5a5; border: 1px solid #ef4444; }
+        
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 600;
+            font-family: monospace;
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .money-badge {
+            background: #1a2a1a;
+            padding: 8px 24px;
+            border-radius: 40px;
+            display: inline-block;
+            margin: 16px 0;
+        }
+        
+        .admin-sec {
+            background: #111;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+            border: 1px solid var(--border);
+        }
+        
+        .info-subnav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .info-subnav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-subnav-item button {
+            flex: 1;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: left;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .info-subnav-item button.active-sub {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: white;
+        }
+        .info-subnav-item .delete-sub-btn {
+            width: 36px;
+            background: #b91c1c;
+        }
+        .info-fisch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        .info-fisch-card {
+            background: #111;
+            border-left: 3px solid #dc2626;
+            padding: 12px 16px;
+            border-radius: 12px;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+        .modal-content {
+            background: #141414;
+            border: 1px solid #333;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 24px;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-dim); }
+        .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+        
+        #loginPopup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+        }
+        .popup-content {
+            background: #1a1a1a;
+            border-radius: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 28px;
+            border: 1px solid #333;
+        }
+        
+        #customConfirm {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10002;
+        }
+        .confirm-box {
+            background: #1a1a1a;
+            border-radius: 24px;
+            padding: 28px;
+            text-align: center;
+            max-width: 400px;
+            border: 1px solid #dc2626;
+        }
+        .confirm-btns {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .bc-card {
+            background: #1f1f1f;
+            border-left: 4px solid #dc2626;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bc-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #dc2626;
+            text-align: center;
+            margin: 0 0 20px 0;
+            letter-spacing: 0.5px;
+        }
+        #bcText {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 1rem;
+            color: #e5e5e5;
+        }
+        .bc-button {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: 0.2s;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+        .bc-button:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+        .bc-button:active {
+            transform: scale(0.97);
+        }
+        
+        #customToast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #dc2626;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            z-index: 20000;
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+        }
+        
+        .grid-rate {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1.5fr 0.5fr 0.5fr;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .btn-excel { background: #0284c7; width: auto; }
+        .btn-edit { background: #3b82f6; padding: 4px 10px; font-size: 0.7rem; width: auto; }
+        .user-status-indicator {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+        
+        /* filter history style - range date */
+        .history-filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .history-filter-bar label {
+            font-weight: 500;
+            color: var(--text-dim);
+        }
+        .history-filter-bar input {
+            width: auto;
+            flex: 0 0 150px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; }
+            .sidebar .nav-text { display: none; }
+            .sidebar-header h3, .sidebar-header p { display: none; }
+            .main-content { margin-left: 70px; max-width: calc(100% - 70px); }
+            .nav-item { justify-content: center; padding: 12px 0; }
+        }
+        
+        /* ========== LOGIN PAGE ========== */
+        #loginPage {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 20% 30%, #0b0b0b, #000000);
+            padding: 40px 30px;
+        }
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            background-size: auto 100%;
+            background-repeat: repeat-x;
+            animation: slideBackground 60s linear infinite;
+            z-index: 0;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        @keyframes slideBackground {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .login-main-container {
+            position: relative;
+            z-index: 2;
+            max-width: 1400px;
+            width: 100%;
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .left-area { flex: 2.5; min-width: 280px; }
+        .title-left { margin-bottom: 30px; }
+        .title-left h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #dc2626, #ff4d4d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0;
+            font-weight: 700;
+        }
+        .title-left p {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+            margin-bottom: 45px;
+        }
+        .user-card {
+            background: rgba(20,20,24,0.9);
+            backdrop-filter: blur(2px);
+            border-radius: 24px;
+            padding: 18px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .user-card:hover { transform: translateY(-4px); background: rgba(220,38,38,0.8); }
+        .card-avatar { font-size: 2.4rem; margin-bottom: 8px; }
+        .card-username {
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            letter-spacing: -0.2px;
+        }
+        .card-role {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            color: #ddd;
+        }
+        .stats-wrapper {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .stat-block {
+            flex: 1;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            border-radius: 32px;
+            padding: 18px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #dc2626);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #ccc;
+            margin-top: 4px;
+        }
+        .stat-list-container {
+            margin-top: 12px;
+            max-height: 120px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+            text-align: left;
+            padding: 0 6px;
+        }
+        .stat-list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            color: #e0e0e0;
+            font-family: 'Inter', monospace;
+            font-size: 0.8rem;
+            border-bottom: 2px solid transparent;
+            margin-bottom: 4px;
+        }
+        .stat-list-item.online-item {
+            border-bottom-color: #16a34a;
+        }
+        .stat-list-item.cadangan-item {
+            border-bottom-color: #f59e0b;
+        }
+        .stat-list-name {
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+        }
+        .stat-list-duration {
+            font-family: monospace;
+            color: #f97316;
+            font-size: 0.75rem;
+        }
+        .info-right-panel {
+            flex: 1.2;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 28px;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+        }
+        .info-right-panel h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc2626;
+            padding-left: 16px;
+        }
+        .info-right-panel p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        .footer-thanks {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 0.8rem;
+            color: #dddddd;
+            border-top: 1px dashed rgba(255,255,255,0.2);
+            padding-top: 14px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+        }
+        .developer-credit {
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: #bbbbbb;
+            text-align: right;
+            font-family: 'Inter', monospace;
+            letter-spacing: 0.3px;
+        }
+        .password-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20001;
+        }
+        .password-modal {
+            background: #1c1c1e;
+            border-radius: 32px;
+            width: 90%;
+            max-width: 380px;
+            padding: 32px 28px;
+            text-align: center;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.5);
+        }
+        .password-modal h3 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin: 0 0 20px 0;
+            color: #dc2626;
+        }
+        .modal-username {
+            font-size: 1.2rem;
+            background: rgba(220,38,38,0.15);
+            display: inline-block;
+            padding: 8px 28px;
+            border-radius: 60px;
+            margin-bottom: 24px;
+            color: #dc2626;
+            font-family: monospace;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .password-modal input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 60px;
+            margin: 8px 0 20px 0;
+            text-align: center;
+            font-family: 'Inter', monospace;
+            font-size: 1rem;
+            background: #2c2c2e;
+            border: 1px solid #3a3a3c;
+            color: white;
+            box-sizing: border-box;
+        }
+        .password-modal input:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        .btn-login-modal, .btn-back {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .btn-login-modal {
+            background: #dc2626;
+            color: white;
+        }
+        .btn-login-modal:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+        .btn-back {
+            background: #3a3a3c;
+            color: #e5e5e5;
+        }
+        .btn-back:hover {
+            background: #4a4a4e;
+            transform: translateY(-2px);
+        }
+        @media (max-width: 480px) {
+            .password-modal {
+                padding: 28px 20px;
+                max-width: 340px;
+            }
+            .modal-buttons {
+                gap: 12px;
+            }
+            .btn-login-modal, .btn-back {
+                padding: 10px 0;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="animatedBg" class="animated-bg"></div>
+
+<!-- ========== LOGIN PAGE ========== -->
+<div id="loginPage">
+    <div class="login-main-container">
+        <div class="left-area">
+            <div class="title-left">
+                <h1>MMR STORE</h1>
+                <p>Absensi & Manajemen Karyawan</p>
+            </div>
+            <div id="userCardsContainer" class="user-grid"><div>Memuat data...</div></div>
+            <div class="stats-wrapper">
+                <div class="stat-block">
+                    <div class="stat-number" id="onlineCount">0</div>
+                    <div class="stat-label">ONLINE</div>
+                    <div id="onlineList" class="stat-list-container"></div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-number" id="cadanganCount">0</div>
+                    <div class="stat-label">CADANGAN</div>
+                    <div id="cadanganList" class="stat-list-container"></div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-number" id="totalStaffCount">0</div>
+                    <div class="stat-label">TOTAL STAFF</div>
+                </div>
+            </div>
+        </div>
+        <div class="info-right-panel">
+            <h3>Informasi Sistem</h3>
+            <p><strong>Tujuan:</strong><br>> Absensi ini dibuat untuk mempermudah pembukuan dan pendataan, agar bisa dilakukan dengan mudah dan tidak sepenuhnya manual.<br>> Sistem ini masih dalam tahap semi-manual untuk pendataannya.</p>
+            <p><strong>Perhatian:</strong><br>> Pekerjaan ini membutuhkan fokus ekstra karena dapat mempengaruhi rating toko, pendapatan, kerugian di dalam toko, serta reputasi toko dan reputasi kalian para admin toko.<br> >Jangan lupa selalu berdoa sesuai keyakinan masing-masing, jaga kesehatan agar bisa tetap fokus dalam bekerja.</p>
+            <p><strong>Aturan Penting:</strong><br>> Update harga setiap 10 menit sekali dengan batas maksimal 1 jam sekali.<br>> Selalu cross-check item yang akan di-trade dengan pembeli.<br>> Pastikan data absensi diisi dengan jujur dan bertanggung jawab. Laporkan kendala segera ke admin utama.</p>
+            <div class="footer-thanks">
+                Terima kasih atas kerja sama dan dedikasi tim MMR Store.<br>
+                <span class="developer-credit">M Fadil Sanjaya<br>V 1.0.2 (fix hari)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal password -->
+<div id="passwordModal" class="password-modal-overlay">
+    <div class="password-modal">
+        <h3>MASUK</h3>
+        <div class="modal-username" id="modalUsernameDisplay">karyawan</div>
+        <input type="password" id="modalPasswordInput" placeholder="Kata Sandi">
+        <div class="modal-buttons">
+            <button class="btn-back" id="closeModalBtn">KEMBALI</button>
+            <button class="btn-login-modal" id="confirmLoginBtn">MASUK</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== POPUP ATURAN ========== -->
+<div id="loginPopup">
+    <div class="popup-content">
+        <h2 style="color:var(--p); text-align:center;">Pesan</h2>
+        <p style="text-align:center;">Semoga kita diberikan kemudahan dan kelancaran serta kesabaran dalam pekerjaan hari ini.<br>(hukuman : 1 ringan : 2 sedang : 3 berat)</p>
+        <h3>Aturan</h3>
+        <ul>
+            <li>Selalu ramah kepada customer dan usahakan untuk tidak toxic apapun alasannya</li>
+            <li>Usahakan untuk setiap 10-30 menit untuk melalukan pergantian harga (1)</li>
+            <li>Apabila ada keperluan mendadak yang membutuhkan waktu dari 10 menit mohon konfirmasi ke discord dan meminta tolong kepada admin lain untuk menggantikan sementara (1 - 2)</li>
+            <li>Pastikan Username/id dan item yang diterima sesuai (2)</li>
+            <li>Tidak diperbolehkan toxic secara tertulis (Chat Website/ In game ) (1)</li>
+            <li>Memanipulasi waktu absensi (absensi berjalan tetapi tidak stand by atau offline lebih dari 3 jam ) (1 - 3)</li>
+            <li>Wajib mempelajari gameplay roblox ( FISCH - SAILOR PIECE - DLL) (1)</li>
+            <li>Wajib mempelajari joki dan update mengenai map FISCH (1)</li>
+            <li>Saling membantu admin lain saat diperlukan ( - )</li>
+            <li>Apabila Staff atau Admin yang berjaga salah memberikan item maka akan diwajibkan untuk mengganti ( bisa dibantu owner ) sehingga dimohon untuk mengecek username dan item yang dibeli customer ( 1 - 3 )</li>
+            <li>Jika ada pertanyaan bisa diajukan lewat website atau discord owner</li>
+            <li>Dilarang keras membocoran saldo pendapatan kepada orang lain selain admin atau staff ( 3 )</li>
+        </ul>
+        <div style="margin-top:15px;">
+            <p>Note :</p>
+            <ul>
+                <li>Hukuman 1 = Teguran</li>
+                <li>Hukuman 2 = Pengurangan Pendapatan selama 1 hari</li>
+                <li>Hukuman 3 = Pengurangan pendapatan ( selama 2 - 5 hari ) - apabila terlalu memberatkan bisa di toleransi</li>
+                <li>* Apabila Staff atau Admin Tidak memiliki riwayat pelanggaran maka akan diberikan bonus yang akan diberikan di akhir bulan</li>
+            </ul>
+        </div>
+        <div id="countdownArea" style="text-align:center; margin:20px 0;">Tunggu <span id="secs">20</span> detik...</div>
+        <button id="btnPopupOk" style="display:none; background:var(--p); width:100%;" onclick="closePopup()">OK, SAYA MENGERTI</button>
+    </div>
+</div>
+
+<!-- ========== MODAL ========== -->
+<div id="customConfirm"><div class="confirm-box"><h3 id="confirmTitle">Konfirmasi</h3><p id="confirmMsg"></p><div class="confirm-btns"><button class="btn-no" onclick="handleConfirm(false)">BATAL</button><button class="btn-yes" onclick="handleConfirm(true)">YA</button></div></div></div>
+<div id="editLogModal" class="modal-overlay"><div class="modal-content"><h3>Edit Riwayat Kerja</h3><div class="form-group"><label>Karyawan</label><select id="editLogEmployee"></select></div><div class="form-group"><label>Tanggal</label><input type="date" id="editLogDate"></div><div class="form-group"><label>Jam Masuk</label><input type="time" id="editLogTimeIn" step="1"></div><div class="form-group"><label>Jam Keluar</label><input type="time" id="editLogTimeOut" step="1"></div><div class="modal-actions"><button class="btn-no" onclick="closeEditModal()">BATAL</button><button class="btn-yes" onclick="saveEditedLog()">SIMPAN</button></div></div></div>
+<div id="editSectionModal" class="modal-overlay"><div class="modal-content"><h3>Edit Subbab</h3><div class="form-group"><label>Judul Subbab</label><input type="text" id="editSectionName"></div><div class="form-group"><label>Daftar Paket</label><div id="itemsEditor"></div><button type="button" class="btn-secondary" onclick="addNewItemField()">+ Tambah Paket</button></div><div class="modal-actions"><button class="btn-no" onclick="closeEditSectionModal()">BATAL</button><button class="btn-yes" onclick="saveSectionChanges()">SIMPAN</button></div></div></div>
+<div id="addSectionModal" class="modal-overlay"><div class="modal-content"><h3>Tambah Subbab Baru</h3><div class="form-group"><label>Judul Subbab</label><input type="text" id="newSectionTitle" placeholder="Contoh: GrowGarden, Roblox"></div><div class="modal-actions"><button class="btn-no" onclick="closeAddSectionModal()">BATAL</button><button class="btn-yes" onclick="confirmAddSection()">TAMBAH</button></div></div></div>
+
+<!-- ========== MODAL TAMBAH RIWAYAT KERJA MANUAL ========== -->
+<div id="addLogModal" class="modal-overlay"><div class="modal-content"><h3>Tambah Riwayat Kerja Manual</h3><div class="form-group"><label>Karyawan</label><select id="addLogEmployee"></select></div><div class="form-group"><label>Tanggal</label><input type="date" id="addLogDate"></div><div class="form-group"><label>Jam Masuk</label><input type="time" id="addLogTimeIn" step="1"></div><div class="form-group"><label>Jam Keluar</label><input type="time" id="addLogTimeOut" step="1"></div><div class="modal-actions"><button class="btn-no" onclick="closeAddLogModal()">BATAL</button><button class="btn-yes" onclick="saveNewLog()">SIMPAN</button></div></div></div>
+
+<!-- ========== MAIN APP ========== -->
+<div id="mainApp" style="display:none;">
+    <div class="app-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-header"><h3>MMR STORE</h3><p>Absensi System</p></div>
+            <div class="nav-menu">
+                <div class="nav-item" data-tab="dashboard"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></div>
+                <div class="nav-item" data-tab="admin"><span class="nav-icon">🔧</span><span class="nav-text">Admin Control</span></div>
+                <div class="nav-item" data-tab="employees"><span class="nav-icon">👥</span><span class="nav-text">Data Karyawan</span></div>
+                <div class="nav-item" data-tab="history"><span class="nav-icon">📋</span><span class="nav-text">Riwayat Kerja</span></div>
+                <div class="nav-item" data-tab="info"><span class="nav-icon">ℹ️</span><span class="nav-text">Informasi</span></div>
+            </div>
+        </div>
+        <div class="main-content">
+            <!-- Dashboard -->
+            <div id="tab-dashboard" class="tab-content">
+               <div id="bcDisplay" class="bc-card" style="display:none;">
+                    <div class="bc-title">Pengumuman Pusat</div>
+                    <div id="bcText"></div>
+                    <div style="text-align: center;"><a id="bcLink" href="#" target="_blank" class="bc-button">Kunjungi</a></div>
+                </div>
+                <div class="card"><div style="display:flex; justify-content:space-between;"><div><h2>Dashboard</h2><div><span id="userLabel"></span> <span id="userStatusIndicator" class="user-status-indicator">🔴 OFFLINE</span> | <span id="realtimeClock"></span></div></div><button onclick="location.reload()">Logout</button></div></div>
+                <div id="penaltyContainer" class="card" style="display:none;"></div>
+                <div class="card" style="text-align:center;">
+                    <div id="rateInfo">Rate: Rp 0 / 00:00:00</div>
+                    <div class="timer-display" id="timer">00:00:00</div>
+                    <div class="money-badge" id="liveMoney">Rp 0</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; margin-top:16px;">
+                        <button id="btnIn" class="btn-success" onclick="askStartWork()">Mulai</button>
+                        <button id="btnCad" class="btn-secondary" onclick="setCadangan()">Cadangan</button>
+                        <button id="btnStopCad" class="btn-danger" onclick="stopCadangan()" disabled>Stop Cadangan</button>
+                        <button id="btnOut" class="btn-danger" onclick="askStopWork()" disabled>Selesai</button>
+                    </div>
+                </div>
+                <div class="card" id="userFeedbackSection" style="display:none;"><h4>Kirim Kritik & Saran</h4><textarea id="fbMsg" rows="3"></textarea><button class="btn-primary" style="margin-top:12px;" onclick="askSendFeedback()">Kirim</button></div>
+            </div>
+            <!-- Admin -->
+            <div id="tab-admin" class="tab-content">
+                <div class="card"><h3>Owner Control</h3>
+                    <div class="admin-sec"><h4>Pesan Masuk Anonim</h4><div id="feedbackListAdmin"></div><button class="btn-danger" onclick="askClearFeedbacks()">Hapus Semua</button></div>
+                    <div class="admin-sec"><h4>Tambah Akun</h4><div style="display:grid; grid-template-columns:1fr 1fr 1fr 0.5fr; gap:8px;"><input id="newU" placeholder="User"><input id="newP" placeholder="Pass"><select id="newR"><option value="user">User</option><option value="admin">Admin</option></select><button class="btn-success" onclick="askAddUser()">Tambah</button></div></div>
+                    <div class="admin-sec"><h4>Broadcast</h4><input id="bcMsgIn" placeholder="Pesan"><input id="bcLinkIn" placeholder="URL Link" style="margin-top:8px;"><button class="btn-primary" style="margin-top:12px;" onclick="askSetBC()">Update</button></div>
+                    <div class="admin-sec"><h4>Berikan Penalti</h4><div style="display:grid; grid-template-columns:1fr 1fr 1fr 0.5fr; gap:8px;"><select id="penUser"></select><select id="penLvl"><option value="p-ringan">Ringan</option><option value="p-sedang">Sedang</option><option value="p-berat">Berat</option></select><input id="penNote" placeholder="Alasan"><button class="btn-danger" onclick="askSendPen()">Kirim</button></div></div>
+                    <div class="admin-sec"><h4>Riwayat Penalti</h4><div style="overflow-x:auto;"><table class="penalty-history-table"><thead><tr><th>No</th><th>Tanggal</th><th>Karyawan</th><th>Level</th><th>Alasan</th><th>Aksi</th></tr></thead><tbody id="penaltyHistoryList"></tbody></table></div></div>
+                </div>
+            </div>
+            <!-- Data Karyawan -->
+            <div id="tab-employees" class="tab-content">
+                <div class="card"><h3>Kelola Karyawan & Rate</h3><div id="salaryManager"></div></div>
+                <div class="card"><h3>Status Karyawan</h3><div style="overflow-x:auto;"><table class="employee-status-table"><thead><tr><th>No</th><th>Nama</th><th>Status</th><th>Terakhir Update</th></tr></thead><tbody id="statusTableList"></tbody></table></div></div>
+            </div>
+            <!-- Riwayat Kerja -->
+            <div id="tab-history" class="tab-content">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:16px; align-items:center; flex-wrap:wrap;">
+                        <h3>Riwayat Absensi</h3>
+                        <div>
+                            <button class="btn-excel" id="exportExcelRangeBtn">Download Excel (Rentang)</button>
+                            <button class="btn-success" id="addHistoryBtn" style="margin-left: 10px;">+ Tambah Riwayat</button>
+                        </div>
+                    </div>
+                    <!-- FITUR FILTER RENTANG TANGGAL -->
+                    <div class="history-filter-bar">
+                        <label>Dari Tanggal:</label>
+                        <input type="date" id="historyStartDate">
+                        <label>Sampai Tanggal:</label>
+                        <input type="date" id="historyEndDate">
+                        <button class="btn-primary" id="applyHistoryRange">Terapkan</button>
+                        <button class="btn-secondary" id="resetHistoryRange">Reset</button>
+                        <span style="font-size:0.75rem; color:#aaa;">(Kosongkan untuk semua data)</span>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Hari & Tgl</th>
+                                    <th>Nama</th>
+                                    <th>Masuk</th>
+                                    <th>Keluar</th>
+                                    <th>Durasi</th>
+                                    <th>Gaji</th>
+                                    <th>Riwayat Penalti</th>
+                                    <th id="thAction" style="display:none;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Informasi -->
+            <div id="tab-info" class="tab-content">
+                <div class="card"><div style="display:flex; justify-content:space-between; margin-bottom:16px;"><h3>Informasi & Panduan</h3><div id="infoAdminControls" style="display:none;"><button class="btn-secondary" onclick="showAddSectionModal()">+ Tambah Subbab</button></div></div><div id="infoSubnavContainer" class="info-subnav"></div><div id="infoContentContainer"><div class="placeholder-message" style="text-align:center; padding:40px;">📌 Pilih subbab di atas</div></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== KODE ASLI (HANYA DITAMBAH FUNGSI PARSING TANGGAL & JAM YANG LEBIH KUAT) ====================
+const DB_URL = "https://absensi-mmr-store-default-rtdb.asia-southeast1.firebasedatabase.app/.json";
+let currentUser = null, startTime, timerInt, logs = [], userPenalties = [], resolveConfirm = null;
+const daftarHari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+let currentEditingLogId = null;
+
+let historyStartFilter = "";
+let historyEndFilter = "";
+
+let notificationInterval = null;
+let notificationPermissionGranted = false;
+function requestNotificationPermission() {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "granted") {
+        notificationPermissionGranted = true;
+        startNotificationReminder();
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                notificationPermissionGranted = true;
+                startNotificationReminder();
+                showToast("✅ Notifikasi diaktifkan! Setiap 10 menit.");
+            }
+        });
+    }
+}
+function startNotificationReminder() {
+    if (notificationInterval) clearInterval(notificationInterval);
+    notificationInterval = setInterval(() => {
+        if (notificationPermissionGranted) {
+            new Notification("⏰ MMR Store Reminder", {
+                body: "Jangan lupa fokus bekerja & update harga!",
+                icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png",
+                silent: false
+            });
+        }
+    }, 10 * 60 * 1000);
+}
+
+// ========== PERBAIKAN: getDayName menggunakan parseDateToYMD yang sudah kuat ==========
+function getDayName(dateString) {
+    if (!dateString) return "-";
+    const ymd = parseDateToYMD(dateString);
+    if (!ymd) return "-";
+    const [year, month, day] = ymd.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    if (isNaN(date.getTime())) return "-";
+    return daftarHari[date.getDay()];
+}
+
+function getPenaltyLevelName(level) {
+    switch(level) {
+        case 'p-ringan': return 'Ringan';
+        case 'p-sedang': return 'Sedang';
+        case 'p-berat': return 'Berat';
+        default: return level;
+    }
+}
+function getPenaltyClass(level) {
+    switch(level) {
+        case 'p-ringan': return 'penalti-ringan';
+        case 'p-sedang': return 'penalti-sedang';
+        case 'p-berat': return 'penalti-berat';
+        default: return '';
+    }
+}
+function normalizeString(str) { return (str || "").trim().toLowerCase(); }
+
+// ========== FUNGSI PARSING TANGGAL YANG KUAT (MEMBACA BERBAGAI FORMAT) ==========
+function parseDateToYMD(dateStr) {
+    if (!dateStr) return null;
+    dateStr = dateStr.trim();
+    // Jika sudah YYYY-MM-DD
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
+    
+    // Coba format dd/mm/yyyy atau mm/dd/yyyy
+    let parts = dateStr.split('/');
+    if (parts.length === 3) {
+        let a = parseInt(parts[0], 10);
+        let b = parseInt(parts[1], 10);
+        let y = parseInt(parts[2], 10);
+        if (isNaN(a) || isNaN(b) || isNaN(y) || y < 1000) return null;
+        // Deteksi: jika a > 12 dan b <= 12, kemungkinan a=hari, b=bulan
+        if (a > 12 && b <= 12) {
+            return `${y}-${b.toString().padStart(2,'0')}-${a.toString().padStart(2,'0')}`;
+        }
+        // jika b > 12 dan a <= 12, kemungkinan a=bulan, b=hari
+        if (b > 12 && a <= 12) {
+            return `${y}-${a.toString().padStart(2,'0')}-${b.toString().padStart(2,'0')}`;
+        }
+        // asumsikan dd/mm/yyyy
+        return `${y}-${b.toString().padStart(2,'0')}-${a.toString().padStart(2,'0')}`;
+    }
+    return null;
+}
+
+// ========== FUNGSI FORMAT JAM KE HH:MM:SS (DARI BERBAGAI FORMAT) ==========
+function formatTimeTo24HMS(timeStr) {
+    if (!timeStr) return "00:00:00";
+    timeStr = timeStr.trim();
+    // Cek apakah mengandung AM/PM
+    let lower = timeStr.toLowerCase();
+    if (lower.includes('am') || lower.includes('pm')) {
+        let [time, modifier] = timeStr.split(' ');
+        let [hours, minutes, seconds] = time.split(':');
+        if (seconds === undefined) seconds = "00";
+        hours = parseInt(hours, 10);
+        if (modifier === 'pm' && hours !== 12) hours += 12;
+        if (modifier === 'am' && hours === 12) hours = 0;
+        return `${hours.toString().padStart(2,'0')}:${minutes}:${seconds}`;
+    }
+    // Ganti titik dengan titik dua
+    timeStr = timeStr.replace(/\./g, ':');
+    let parts = timeStr.split(':');
+    if (parts.length >= 2) {
+        let hours = parseInt(parts[0], 10);
+        if (!isNaN(hours)) {
+            parts[0] = hours.toString().padStart(2,'0');
+        }
+        if (parts.length === 2) parts.push("00");
+        return parts.join(':');
+    }
+    return "00:00:00";
+}
+
+function isPenaltyMatchLog(penalty, logNama, logDate) {
+    if (!penalty || !logNama || !logDate) return false;
+    if (normalizeString(penalty.to) !== normalizeString(logNama)) return false;
+    if (penalty.tglOnly) {
+        const penYMD = parseDateToYMD(penalty.tglOnly);
+        const logYMD = parseDateToYMD(logDate);
+        if (penYMD && logYMD) return penYMD === logYMD;
+        if (penalty.tglOnly === logDate) return true;
+    }
+    if (penalty.tanggal) {
+        const datePart = penalty.tanggal.split(' ')[0];
+        const penYMD = parseDateToYMD(datePart);
+        const logYMD = parseDateToYMD(logDate);
+        if (penYMD && logYMD) return penYMD === logYMD;
+    }
+    return false;
+}
+function displayPenaltiesForUser() {
+    if(!currentUser) return;
+    const myPen = userPenalties.filter(p => normalizeString(p.to) === normalizeString(currentUser.username));
+    const container = document.getElementById('penaltyContainer');
+    if(myPen.length === 0) { container.style.display = 'none'; return; }
+    container.style.display = 'block';
+    let html = '<div class="penalty-list">';
+    myPen.forEach(pen => {
+        let levelName = getPenaltyLevelName(pen.lv);
+        let levelClass = getPenaltyClass(pen.lv);
+        html += `<div class="penalti-item ${levelClass}">⚠️ ${levelName}: ${pen.msg}</div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+function displayPenaltyHistory() {
+    if(!currentUser || currentUser.role !== 'admin') return;
+    const tbody = document.getElementById('penaltyHistoryList');
+    if(!tbody) return;
+    let html = ''; let no = 1;
+    [...userPenalties].reverse().forEach(pen => {
+        const levelName = getPenaltyLevelName(pen.lv);
+        const levelClass = getPenaltyClass(pen.lv);
+        const tanggal = pen.tanggal || new Date().toLocaleDateString('id-ID');
+        html += `<tr>
+                            <td>${no++}</td>
+                            <td>${tanggal}</td>
+                            <td><strong>${pen.to}</strong></td>
+                            <td><span class="penalti-item ${levelClass}">${levelName}</span></td>
+                            <td>${pen.msg || '-'}</td>
+                            <td><button class="btn-delete-penalty" onclick="askDelPen('${pen.id}')">Hapus</button></td>
+                        </tr>`;
+    });
+    tbody.innerHTML = html || '<tr><td colspan="6">Belum ada riwayat penalti</td></tr>';
+}
+function initSidebar() {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const tabId = item.getAttribute('data-tab');
+            if (item.style.display !== 'none') {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+                document.getElementById(`tab-${tabId}`).classList.add('active-tab');
+            }
+        });
+    });
+}
+async function updateEmpStatus(status) {
+    if(!currentUser) return;
+    await fetch(DB_URL.replace('.json', `users/${currentUser.username}/status.json`), { method: 'PUT', body: JSON.stringify(status) });
+    await updateGlobalEmployeeStatus(currentUser.username, status);
+}
+async function updateGlobalEmployeeStatus(username, status) {
+    const statusData = { status: status, lastUpdate: new Date().toISOString(), lastUpdateTime: new Date().toLocaleString('id-ID') };
+    await fetch(DB_URL.replace('.json', `employeeStatus/${username}.json`), { method: 'PUT', body: JSON.stringify(statusData) });
+}
+async function stopCadangan() {
+    const ok = await openConfirm("Berhenti dari Cadangan", "Anda akan keluar dari status CADANGAN dan kembali OFFLINE. Lanjut?");
+    if(ok) {
+        if(timerInt) clearInterval(timerInt);
+        await updateEmpStatus("offline");
+        await updateGlobalEmployeeStatus(currentUser.username, "offline");
+        document.getElementById('timer').innerText = "00:00:00";
+        document.getElementById('liveMoney').innerText = "Rp 0";
+        document.getElementById('btnIn').disabled = false;
+        document.getElementById('btnCad').disabled = false;
+        document.getElementById('btnStopCad').disabled = true;
+        document.getElementById('btnOut').disabled = true;
+        localStorage.removeItem('workStartTime_' + currentUser.username);
+        startTime = null;
+        updateUserStatusBadge();
+        showToast('✅ ANDA TIDAK DALAM MODE CADANGAN LAGI\nStatus: OFFLINE');
+    }
+}
+async function setCadangan() {
+    const ok = await openConfirm("Status Cadangan", "Anda akan beralih ke status CADANGAN (Waktu & Gaji tidak berjalan). Lanjut?");
+    if(ok) {
+        if(timerInt) clearInterval(timerInt);
+        await updateEmpStatus("cadangan");
+        await updateGlobalEmployeeStatus(currentUser.username, "cadangan");
+        document.getElementById('timer').innerText = "00:00:00";
+        document.getElementById('liveMoney').innerText = "Rp 0";
+        document.getElementById('btnIn').disabled = true;
+        document.getElementById('btnCad').disabled = true;
+        document.getElementById('btnStopCad').disabled = false;
+        document.getElementById('btnOut').disabled = true;
+        localStorage.removeItem('workStartTime_' + currentUser.username);
+        startTime = null;
+        updateUserStatusBadge();
+        showToast('⏳ ANDA DALAM MODE CADANGAN ⏳\nTimer dan gaji berhenti');
+    }
+}
+async function updateUserStatusBadge() {
+    if(!currentUser) return;
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    const status = data?.employeeStatus?.[currentUser.username]?.status || 'offline';
+    const badge = document.getElementById('userStatusIndicator');
+    if(badge) {
+        if(status === 'aktif') { badge.innerHTML = '🟢 AKTIF'; badge.style.background = '#dc2626'; }
+        else if(status === 'cadangan') { badge.innerHTML = '🟡 CADANGAN'; badge.style.background = '#f59e0b'; }
+        else { badge.innerHTML = '🔴 OFFLINE'; badge.style.background = '#6b7280'; }
+    }
+}
+async function checkCurrentStatusAndSetButtons() {
+    if(!currentUser) return;
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    const currentStatus = data?.employeeStatus?.[currentUser.username]?.status || 'offline';
+    if(currentStatus === 'aktif') {
+        document.getElementById('btnIn').disabled = true;
+        document.getElementById('btnCad').disabled = false;
+        document.getElementById('btnStopCad').disabled = true;
+        document.getElementById('btnOut').disabled = false;
+    } else if(currentStatus === 'cadangan') {
+        document.getElementById('btnIn').disabled = true;
+        document.getElementById('btnCad').disabled = true;
+        document.getElementById('btnStopCad').disabled = false;
+        document.getElementById('btnOut').disabled = true;
+    } else {
+        document.getElementById('btnIn').disabled = false;
+        document.getElementById('btnCad').disabled = false;
+        document.getElementById('btnStopCad').disabled = true;
+        document.getElementById('btnOut').disabled = true;
+    }
+}
+function openConfirm(title, msg) {
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmMsg').innerText = msg;
+    document.getElementById('customConfirm').style.display = 'flex';
+    return new Promise((resolve) => { resolveConfirm = resolve; });
+}
+function handleConfirm(val) {
+    document.getElementById('customConfirm').style.display = 'none';
+    if(resolveConfirm) resolveConfirm(val);
+}
+async function startWork() {
+    await updateEmpStatus("aktif");
+    await updateGlobalEmployeeStatus(currentUser.username, "aktif");
+    startTime = new Date();
+    localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString());
+    document.getElementById('btnIn').disabled = true;
+    document.getElementById('btnCad').disabled = false;
+    document.getElementById('btnStopCad').disabled = true;
+    document.getElementById('btnOut').disabled = false;
+    const rateRp = Number(currentUser.rP), rateTotalSec = (Number(currentUser.rH) * 3600) + (Number(currentUser.rM) * 60) + Number(currentUser.rS);
+    updateUserStatusBadge();
+    if (timerInt) clearInterval(timerInt);
+    timerInt = setInterval(() => {
+        if (startTime) {
+            const diffSec = Math.floor((new Date() - startTime) / 1000);
+            updateTimerDisplay(diffSec, rateTotalSec, rateRp);
+        }
+    }, 1000);
+}
+async function askStartWork() {
+    const ok = await openConfirm("Konfirmasi Kerja", "Apakah Anda ingin mulai bekerja sekarang? Waktu akan dimulai dari 00:00:00 dan SEMUA device dengan akun ini akan SINKRON.");
+    if(ok) await window.startWork();
+}
+async function askStopWork() {
+    const ok = await openConfirm("Selesai Kerja", "Apakah Anda yakin ingin mengakhiri shift? Pekerjaan akan DIHENTIKAN di SEMUA device Anda.");
+    if(ok) await window.stopWork();
+}
+async function askSendFeedback() {
+    const msg = document.getElementById('fbMsg').value;
+    if(!msg) return alert("Pesan kosong!");
+    const ok = await openConfirm("Kirim Pesan", "Kirim saran ini secara ANONIM?");
+    if(ok) sendFeedback();
+}
+async function askDelPen(pid) {
+    if(await openConfirm("Hapus Penalti", "Yakin?")) deletePen(pid);
+}
+async function askDelLog(lid) {
+    if(await openConfirm("Hapus Riwayat", "Yakin?")) deleteLog(lid);
+}
+async function askAddUser() {
+    const u = document.getElementById('newU').value;
+    if(await openConfirm("Tambah Akun", `Tambahkan ${u}?`)) addUser();
+}
+async function askSaveUser(un) {
+    if(await openConfirm("Simpan", `Simpan settingan untuk ${un}?`)) saveFullUser(un);
+}
+async function askDeleteUser(un) {
+    if(await openConfirm("HAPUS", `Hapus akun ${un} permanen?`)) deleteUser(un);
+}
+async function askSetBC() {
+    if(await openConfirm("Broadcast", "Update pengumuman pusat?")) setBC();
+}
+async function askSendPen() {
+    const n = document.getElementById('penNote').value;
+    if(!n) { alert("Alasan penalti harus diisi!"); return; }
+    const ok = await openConfirm("Penalti", `Kirim sanksi ${getPenaltyLevelName(document.getElementById('penLvl').value)} ke ${document.getElementById('penUser').value}?`);
+    if(ok) sendPen();
+}
+async function askClearFeedbacks() {
+    if(await openConfirm("Bersihkan", "Hapus semua pesan anonim?")) clearFeedbacks();
+}
+setInterval(() => { const n = new Date(); document.getElementById('realtimeClock').innerText = `${daftarHari[n.getDay()]}, ${n.toLocaleTimeString('id-ID')}`; }, 1000);
+function startPopup() {
+    document.getElementById('loginPopup').style.display = 'flex';
+    let timeLeft = 20;
+    const countdown = setInterval(() => {
+        timeLeft--;
+        document.getElementById('secs').innerText = timeLeft;
+        if(timeLeft <= 0) { clearInterval(countdown); document.getElementById('countdownArea').style.display = 'none'; document.getElementById('btnPopupOk').style.display = 'block'; }
+    }, 1000);
+}
+function closePopup() { document.getElementById('loginPopup').style.display = 'none'; }
+async function loadEmployeeStatusTable() {
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    const users = data?.users || {};
+    const statuses = data?.employeeStatus || {};
+    const tbody = document.getElementById('statusTableList');
+    if(!tbody) return;
+    let html = ''; let no = 1;
+    for(const [username, userData] of Object.entries(users)) {
+        let status = 'offline', lastUpdate = '-';
+        if(statuses[username]) { status = statuses[username].status || 'offline'; lastUpdate = statuses[username].lastUpdateTime || '-'; }
+        let statusClass = '', statusText = '';
+        if(status === 'aktif') { statusClass = 'status-aktif'; statusText = '🟢 AKTIF'; }
+        else if(status === 'cadangan') { statusClass = 'status-cadangan'; statusText = '🟡 CADANGAN'; }
+        else { statusClass = 'status-offline'; statusText = '🔴 OFFLINE'; }
+        html += `<tr>
+                            <td>${no++}</td>
+                            <td><strong>${username}</strong></td>
+                        <td class="status-cell"><span class="status-badge ${statusClass}">${statusText}</span></td>
+                            <td>${lastUpdate}</td>
+                        </tr>`;
+    }
+    tbody.innerHTML = html;
+}
+function showApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('userLabel').innerText = currentUser.username.toUpperCase();
+    initSidebar();
+    updateUserStatusBadge();
+    setInterval(updateUserStatusBadge, 3000);
+    const savedStartTime = localStorage.getItem('workStartTime_' + currentUser.username);
+    if (savedStartTime) {
+        startTime = new Date(savedStartTime);
+        document.getElementById('btnIn').disabled = true;
+        document.getElementById('btnOut').disabled = false;
+        const rateRp = Number(currentUser.rP), rateTotalSec = (Number(currentUser.rH) * 3600) + (Number(currentUser.rM) * 60) + Number(currentUser.rS);
+        if (timerInt) clearInterval(timerInt);
+        timerInt = setInterval(() => {
+            if (startTime) {
+                const diffSec = Math.floor((new Date() - startTime) / 1000);
+                updateTimerDisplay(diffSec, rateTotalSec, rateRp);
+            }
+        }, 1000);
+    }
+    const navItems = document.querySelectorAll('.nav-item');
+    if(currentUser.role === 'admin') {
+        navItems.forEach(item => { item.style.display = 'flex'; });
+        document.getElementById('userFeedbackSection').style.display = 'none';
+        document.getElementById('thAction').style.display = 'table-cell';
+        document.getElementById('infoAdminControls').style.display = 'block';
+        const addHistoryBtn = document.getElementById('addHistoryBtn');
+        if(addHistoryBtn) addHistoryBtn.style.display = 'inline-block';
+    } else {
+        navItems.forEach(item => {
+            const tabId = item.getAttribute('data-tab');
+            if(tabId === 'dashboard' || tabId === 'history' || tabId === 'info') item.style.display = 'flex';
+            else item.style.display = 'none';
+        });
+        document.getElementById('userFeedbackSection').style.display = 'block';
+        document.getElementById('thAction').style.display = 'none';
+        document.getElementById('infoAdminControls').style.display = 'none';
+        const addHistoryBtn = document.getElementById('addHistoryBtn');
+        if(addHistoryBtn) addHistoryBtn.style.display = 'none';
+    }
+    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    const dashboardNav = document.querySelector('.nav-item[data-tab="dashboard"]');
+    if(dashboardNav) dashboardNav.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+    const dashboardTab = document.getElementById('tab-dashboard');
+    if(dashboardTab) dashboardTab.classList.add('active-tab');
+    loadAll();
+    checkCurrentStatusAndSetButtons();
+    if(currentUser.role === 'admin') {
+        loadEmployeeStatusTable();
+        setInterval(() => { if(currentUser && currentUser.role === 'admin') loadEmployeeStatusTable(); }, 5000);
+    }
+    loadInfoSections();
+    requestNotificationPermission();
+    
+    setupHistoryRangeFilter();
+    const addHistoryBtn = document.getElementById('addHistoryBtn');
+    if(addHistoryBtn) addHistoryBtn.onclick = () => showAddLogModal();
+}
+
+function setupHistoryRangeFilter() {
+    const startDateInput = document.getElementById('historyStartDate');
+    const endDateInput = document.getElementById('historyEndDate');
+    const applyBtn = document.getElementById('applyHistoryRange');
+    const resetBtn = document.getElementById('resetHistoryRange');
+    const exportBtn = document.getElementById('exportExcelRangeBtn');
+    if (!startDateInput || !endDateInput || !applyBtn || !resetBtn) return;
+    const savedStart = localStorage.getItem('historyStart_' + (currentUser?.username || ''));
+    const savedEnd = localStorage.getItem('historyEnd_' + (currentUser?.username || ''));
+    if (savedStart) {
+        historyStartFilter = savedStart;
+        startDateInput.value = savedStart;
+    }
+    if (savedEnd) {
+        historyEndFilter = savedEnd;
+        endDateInput.value = savedEnd;
+    }
+    applyBtn.onclick = () => {
+        historyStartFilter = startDateInput.value;
+        historyEndFilter = endDateInput.value;
+        localStorage.setItem('historyStart_' + currentUser.username, historyStartFilter);
+        localStorage.setItem('historyEnd_' + currentUser.username, historyEndFilter);
+        refreshHistoryDisplay();
+        let msg = 'Filter diterapkan: ';
+        if (historyStartFilter) msg += `dari ${historyStartFilter} `;
+        if (historyEndFilter) msg += `sampai ${historyEndFilter}`;
+        if (!historyStartFilter && !historyEndFilter) msg = 'Filter dihapus, menampilkan semua data';
+        showToast(msg);
+    };
+    resetBtn.onclick = () => {
+        startDateInput.value = '';
+        endDateInput.value = '';
+        historyStartFilter = '';
+        historyEndFilter = '';
+        localStorage.removeItem('historyStart_' + currentUser.username);
+        localStorage.removeItem('historyEnd_' + currentUser.username);
+        refreshHistoryDisplay();
+        showToast('Filter direset, menampilkan semua data');
+    };
+    exportBtn.onclick = () => { exportExcelWithRange(); };
+}
+
+function isDateInRange(logDateStr, startYMD, endYMD) {
+    if (!logDateStr) return false;
+    const logYMD = parseDateToYMD(logDateStr);
+    if (!logYMD) return false;
+    if (startYMD && logYMD < startYMD) return false;
+    if (endYMD && logYMD > endYMD) return false;
+    return true;
+}
+
+function refreshHistoryDisplay() {
+    if (!logs.length) {
+        document.getElementById('logBody').innerHTML = '<tr><td colspan="8">Belum ada数据</td></tr>';
+        return;
+    }
+    let filteredLogs = currentUser.role === 'admin' ? [...logs] : logs.filter(l => l.nama === currentUser.username);
+    if (historyStartFilter || historyEndFilter) {
+        const start = historyStartFilter || "0000-01-01";
+        const end = historyEndFilter || "9999-12-31";
+        filteredLogs = filteredLogs.filter(log => isDateInRange(log.tgl, start, end));
+    }
+    // Urutkan berdasarkan tanggal YMD
+    filteredLogs.sort((a, b) => {
+        const aYMD = parseDateToYMD(a.tgl) || '';
+        const bYMD = parseDateToYMD(b.tgl) || '';
+        return bYMD.localeCompare(aYMD);
+    });
+    const tbody = document.getElementById('logBody');
+    if (!tbody) return;
+    let html = '';
+    filteredLogs.forEach(l => {
+        const dayName = getDayName(l.tgl);
+        // Tampilkan tanggal dalam format DD/MM/YYYY
+        let displayDate = l.tgl;
+        const ymd = parseDateToYMD(l.tgl);
+        if (ymd) {
+            const [y, m, d] = ymd.split('-');
+            displayDate = `${d}/${m}/${y}`;
+        }
+        const pens = userPenalties.filter(p => isPenaltyMatchLog(p, l.nama, l.tgl)).map(p => {
+            const levelName = getPenaltyLevelName(p.lv);
+            const levelClass = getPenaltyClass(p.lv);
+            const delBtn = currentUser.role === 'admin' ? `<button onclick="askDelPen('${p.id}')" style="background:none; color:#ef4444; width:auto; padding:0 5px; display:inline; margin-left:5px;">(X)</button>` : '';
+            return `<span class="penalti-item ${levelClass}" style="display:inline-block; margin:2px;">⚠️ ${levelName}: ${p.msg} ${delBtn}</span>`;
+        }).join('');
+        let actionTd = '';
+        if (currentUser.role === 'admin') {
+            actionTd = `<td><button class="btn-edit" onclick="openEditLogModal('${l.id}')">Edit</button> <button onclick="askDelLog('${l.id}')" style="background:var(--d); padding:2px 8px; width:auto;">Hapus</button></td>`;
+        }
+        const namaDisplay = l.nama || 'Tidak Diketahui';
+        let formattedDurasi = l.durasi;
+        if (l.durasi && l.durasi.includes('.')) {
+            const jamDesimal = parseFloat(l.durasi);
+            if (!isNaN(jamDesimal)) {
+                const totalDetik = Math.floor(jamDesimal * 3600);
+                const jam = Math.floor(totalDetik / 3600);
+                const menit = Math.floor((totalDetik % 3600) / 60);
+                const detik = totalDetik % 60;
+                formattedDurasi = `${jam.toString().padStart(2,'0')}:${menit.toString().padStart(2,'0')}:${detik.toString().padStart(2,'0')}`;
+            }
+        } else if (l.durasi && l.durasi.includes(':')) { formattedDurasi = l.durasi; }
+        else if (l.durasi && !isNaN(parseFloat(l.durasi))) {
+            const totalDetik = Math.floor(parseFloat(l.durasi) * 3600);
+            const jam = Math.floor(totalDetik / 3600);
+            const menit = Math.floor((totalDetik % 3600) / 60);
+            const detik = totalDetik % 60;
+            formattedDurasi = `${jam.toString().padStart(2,'0')}:${menit.toString().padStart(2,'0')}:${detik.toString().padStart(2,'0')}`;
+        }
+        // Format jam tampilan
+        const masukDisplay = formatTimeTo24HMS(l.masuk);
+        const keluarDisplay = formatTimeTo24HMS(l.keluar);
+        html += `<tr>
+                           <td>${dayName}, ${displayDate}</td>
+                            <td>${namaDisplay}</td>
+                            <td>${masukDisplay}</td>
+                            <td>${keluarDisplay}</td>
+                            <td>${formattedDurasi}</td>
+                            <td>Rp ${Number(l.gaji).toLocaleString()}</td>
+                            <td><div style="display:flex; flex-wrap:wrap; gap:4px;">${pens || '-'}</div></td>
+                         ${actionTd}
+                        </tr>`;
+    });
+    tbody.innerHTML = html || '<tr><td colspan="8">Tidak ada data untuk filter ini</td></tr>';
+}
+
+async function exportExcelWithRange() {
+    let filteredLogs = currentUser.role === 'admin' ? [...logs] : logs.filter(l => l.nama === currentUser.username);
+    if (historyStartFilter || historyEndFilter) {
+        const start = historyStartFilter || "0000-01-01";
+        const end = historyEndFilter || "9999-12-31";
+        filteredLogs = filteredLogs.filter(log => isDateInRange(log.tgl, start, end));
+    }
+    if (filteredLogs.length === 0) {
+        alert("Tidak ada data untuk rentang tanggal yang dipilih.");
+        return;
+    }
+    filteredLogs.sort((a, b) => {
+        const aYMD = parseDateToYMD(a.tgl) || '';
+        const bYMD = parseDateToYMD(b.tgl) || '';
+        return aYMD.localeCompare(bYMD);
+    });
+    let tableData = [`<tr style="background:#dc2626; color:white;"><td colspan="8">LAPORAN ABSENSI - MMR STORE</td></tr>`,
+                     `<tr><td colspan="8">Exported: ${new Date().toLocaleString()} | Rentang Tanggal: ${historyStartFilter || 'Awal'} s/d ${historyEndFilter || 'Akhir'}</td></tr>`,
+                     `<tr style="background:#dc2626; color:white;"><th>No</th><th>Tgl</th><th>Karyawan</th><th>Masuk</th><th>Keluar</th><th>Durasi</th><th>Gaji</th><th>Penalti</th></tr>`];
+    let ag = {}, ad = {};
+    filteredLogs.forEach((l, i) => { 
+        const pen = userPenalties.filter(p => isPenaltyMatchLog(p, l.nama, l.tgl)).map(p => `${getPenaltyLevelName(p.lv)}: ${p.msg}`).join(', '); 
+        const gajiNominal = Number(l.gaji); 
+        const tglDisplay = parseDateToYMD(l.tgl) || l.tgl;
+        const masukDisplay = formatTimeTo24HMS(l.masuk);
+        const keluarDisplay = formatTimeTo24HMS(l.keluar);
+        tableData.push(`<tr><td>${i+1}</td><td>${tglDisplay}</td><td>${l.nama || '?'}</td><td>${masukDisplay}</td><td>${keluarDisplay}</td><td>${l.durasi}</td><td>Rp ${gajiNominal.toLocaleString()}</td><td>${pen || '-'}</td></tr>`); 
+        if (!ag[l.nama]) ag[l.nama] = 0; ag[l.nama] += gajiNominal; 
+        if (!ad[l.nama]) ad[l.nama] = 0; 
+        const p = l.durasi.split(':'); 
+        ad[l.nama] += (parseInt(p[0])*3600)+(parseInt(p[1])*60)+parseInt(p[2]); 
+    });
+    if (Object.keys(ag).length > 0) {
+        tableData.push(`<tr style="background:#16a34a; color:white;"><td colspan="5">TABEL AKUMULASI (Rentang berlaku)</td></tr>`);
+        Object.keys(ag).forEach((n, idx) => { const s = ad[n], dur = `${Math.floor(s/3600)}j ${Math.floor((s%3600)/60)}m ${s%60}s`; tableData.push(`<tr><td>${idx+1}</td><td>${n}</td><td colspan="2">Rp ${ag[n].toLocaleString()}</td><td colspan="2">${dur}</td></tr>`); });
+    }
+    const blob = new Blob(['\ufeff', `<table border="1">${tableData.join('')}</table>`], { type: "application/vnd.ms-excel" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); 
+    let fileName = `Laporan_Absensi_MMR`;
+    if (historyStartFilter) fileName += `_${historyStartFilter}`;
+    if (historyEndFilter) fileName += `_sampai_${historyEndFilter}`;
+    else if (historyStartFilter) fileName += `_seterusnya`;
+    fileName += `.xls`;
+    a.download = fileName; a.click();
+}
+
+async function loadAll() {
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    logs = data?.logs ? Object.entries(data.logs).map(([id, val]) => ({id, ...val})) : [];
+    userPenalties = data?.penalties ? Object.entries(data.penalties).map(([id, val]) => ({id, ...val})) : [];
+    displayPenaltiesForUser();
+    if(currentUser.role === 'admin') displayPenaltyHistory();
+    refreshHistoryDisplay();
+    if(data?.bc) {
+        document.getElementById('bcDisplay').style.display = 'block';
+        document.getElementById('bcText').innerText = data.bc.msg;
+        document.getElementById('bcLink').href = data.bc.link;
+        document.getElementById('bcLink').style.display = data.bc.link ? 'inline-block' : 'none';
+    }
+    if(currentUser.role === 'admin') {
+        const uList = data?.users || {};
+        document.getElementById('salaryManager').innerHTML = Object.keys(uList).map(un => `
+            <div class="grid-rate">
+                <input type="text" id="editU-${un}" value="${un}" ${un === 'admin' ? 'readonly' : ''}>
+                <input type="text" id="editP-${un}" value="${uList[un].password}">
+                <input type="number" step="any" id="rp-${un}" value="${uList[un].rP || 0}">
+                <div style="display:flex; gap:4px;"><input type="number" id="rh-${un}" value="${uList[un].rH || 0}" style="width:33%">:<input type="number" id="rm-${un}" value="${uList[un].rM || 0}" style="width:33%">:<input type="number" id="rs-${un}" value="${uList[un].rS || 0}" style="width:33%"></div>
+                <button class="btn-success" onclick="askSaveUser('${un}')">Save</button>
+                <button class="btn-danger" onclick="askDeleteUser('${un}')" ${un === 'admin' ? 'disabled' : ''}>Hapus</button>
+            </div>
+        `).join('');
+        document.getElementById('penUser').innerHTML = Object.keys(uList).map(un => `<option value="${un}">${un}</option>`).join('');
+        const fbs = data?.feedbacks ? Object.entries(data.feedbacks).map(([id, val]) => ({id, ...val})) : [];
+        document.getElementById('feedbackListAdmin').innerHTML = fbs.length > 0 ? fbs.slice().reverse().map(f => `<div class="fb-item" style="background:#1a1a1a; padding:10px; border-radius:8px; margin-bottom:8px;"><b>📅 ${f.hari}, ${f.tgl}</b><br>"${f.pesan}"</div>`).join('') : '<p>Kosong.</p>';
+        const editEmployeeSelect = document.getElementById('editLogEmployee');
+        if(editEmployeeSelect) editEmployeeSelect.innerHTML = Object.keys(uList).map(un => `<option value="${un}">${un}</option>`).join('');
+    }
+    const uData = (data?.users && data.users[currentUser.username]) ? data.users[currentUser.username] : currentUser;
+    document.getElementById('rateInfo').innerText = `Rate: Rp ${Number(uData.rP || 0).toLocaleString()} / ${String(uData.rH || 0).padStart(2,'0')}:${String(uData.rM || 0).padStart(2,'0')}:${String(uData.rS || 0).padStart(2,'0')}`;
+    currentUser.rP = uData.rP; currentUser.rH = uData.rH; currentUser.rM = uData.rM; currentUser.rS = uData.rS;
+}
+function openEditLogModal(logId) {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    const log = logs.find(l => l.id === logId);
+    if (!log) return;
+    currentEditingLogId = logId;
+    const select = document.getElementById('editLogEmployee');
+    if (select) {
+        if (select.options.length === 0) {
+            fetch(DB_URL).then(r => r.json()).then(data => {
+                const users = data?.users || {};
+                select.innerHTML = Object.keys(users).map(un => `<option value="${un}">${un}</option>`).join('');
+                select.value = log.nama || '';
+            });
+        } else {
+            select.value = log.nama || '';
+        }
+    }
+    let formattedDate = '';
+    const ymd = parseDateToYMD(log.tgl);
+    if (ymd) formattedDate = ymd;
+    document.getElementById('editLogDate').value = formattedDate;
+    let timeIn = formatTimeTo24HMS(log.masuk).substring(0,5);
+    let timeOut = formatTimeTo24HMS(log.keluar).substring(0,5);
+    document.getElementById('editLogTimeIn').value = timeIn;
+    document.getElementById('editLogTimeOut').value = timeOut;
+    document.getElementById('editLogModal').style.display = 'flex';
+}
+function closeEditModal() {
+    document.getElementById('editLogModal').style.display = 'none';
+    currentEditingLogId = null;
+}
+async function saveEditedLog() {
+    if (!currentEditingLogId) return;
+    const selectedEmployee = document.getElementById('editLogEmployee').value;
+    if (!selectedEmployee) { alert('Pilih karyawan!'); return; }
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    const users = data?.users || {};
+    const userRate = users[selectedEmployee];
+    if (!userRate) { alert('Data rate karyawan tidak ditemukan!'); return; }
+    const rP = Number(userRate.rP) || 0;
+    const rH = Number(userRate.rH) || 0;
+    const rM = Number(userRate.rM) || 0;
+    const rS = Number(userRate.rS) || 0;
+    const rateTotalSec = (rH * 3600) + (rM * 60) + rS;
+    const dateInput = document.getElementById('editLogDate').value;
+    const timeIn = document.getElementById('editLogTimeIn').value + ':00';
+    const timeOut = document.getElementById('editLogTimeOut').value + ':00';
+    if (!dateInput) { alert('Tanggal harus diisi!'); return; }
+    const newTgl = dateInput; // YYYY-MM-DD
+    const [inH, inM, inS] = timeIn.split(':').map(Number);
+    const [outH, outM, outS] = timeOut.split(':').map(Number);
+    let startSeconds = inH * 3600 + inM * 60 + inS;
+    let endSeconds = outH * 3600 + outM * 60 + outS;
+    if (endSeconds < startSeconds) endSeconds += 24 * 3600;
+    const durasiDetik = endSeconds - startSeconds;
+    if (durasiDetik < 0) { alert('Jam keluar tidak valid!'); return; }
+    const durH = Math.floor(durasiDetik / 3600);
+    const durM = Math.floor((durasiDetik % 3600) / 60);
+    const durS = durasiDetik % 60;
+    const newDurasi = `${durH.toString().padStart(2,'0')}:${durM.toString().padStart(2,'0')}:${durS.toString().padStart(2,'0')}`;
+    let newGaji = 0;
+    if (rateTotalSec > 0) newGaji = Math.floor((durasiDetik / rateTotalSec) * rP);
+    const ok = await openConfirm('Simpan Perubahan', `Anda akan mengubah data:\nKaryawan: ${selectedEmployee}\nTanggal: ${newTgl}\nMasuk: ${timeIn}\nKeluar: ${timeOut}\nDurasi: ${newDurasi}\nGaji: Rp ${newGaji.toLocaleString('id-ID')}\n\nLanjutkan?`);
+    if (!ok) return;
+    try {
+        await fetch(DB_URL.replace('.json', `logs/${currentEditingLogId}.json`), {
+            method: 'PATCH',
+            body: JSON.stringify({ nama: selectedEmployee, tgl: newTgl, masuk: timeIn, keluar: timeOut, durasi: newDurasi, gaji: newGaji })
+        });
+        showToast('✅ Data berhasil diperbarui!');
+        closeEditModal();
+        await loadAll();
+    } catch (error) { alert('Terjadi kesalahan saat menyimpan.'); }
+}
+window.openEditLogModal = openEditLogModal;
+window.closeEditModal = closeEditModal;
+window.saveEditedLog = saveEditedLog;
+function updateTimerDisplay(diffSec, rateTotalSec, rateRp) {
+    const h = Math.floor(diffSec/3600).toString().padStart(2,'0');
+    const m = Math.floor((diffSec%3600)/60).toString().padStart(2,'0');
+    const s = (diffSec%60).toString().padStart(2,'0');
+    document.getElementById('timer').innerText = `${h}:${m}:${s}`;
+    const nominal = rateTotalSec > 0 ? (diffSec / rateTotalSec) * rateRp : 0;
+    document.getElementById('liveMoney').innerText = "Rp " + Math.floor(nominal).toLocaleString('id-ID');
+}
+// ==================== stopWork (tetap asli, tapi kita konversi jam ke 24H saat simpan) ====================
+async function stopWork() {
+    if (timerInt) { clearInterval(timerInt); timerInt = null; }
+    localStorage.removeItem('workStartTime_' + currentUser.username);
+    await updateEmpStatus("offline");
+    await updateGlobalEmployeeStatus(currentUser.username, "offline");
+    document.getElementById('btnIn').disabled = false;
+    document.getElementById('btnCad').disabled = false;
+    document.getElementById('btnStopCad').disabled = true;
+    document.getElementById('btnOut').disabled = true;
+    const dur = document.getElementById('timer').innerText;
+    const gajiRaw = document.getElementById('liveMoney').innerText;
+    const gajiClean = gajiRaw.replace("Rp ", "").replace(/\./g, "").replace(/,/g, "").trim();
+    if (startTime && dur !== "00:00:00") {
+        // Format jam 24 jam
+        const formatTime24 = (date) => {
+            const h = date.getHours().toString().padStart(2, '0');
+            const m = date.getMinutes().toString().padStart(2, '0');
+            const s = date.getSeconds().toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        };
+        const waktuMasuk = formatTime24(startTime);
+        const waktuKeluar = formatTime24(new Date());
+        const now = new Date();
+        const tgl = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+        await fetch(DB_URL.replace('.json', 'logs.json'), { 
+            method: 'POST', 
+            body: JSON.stringify({
+                tgl: tgl,
+                nama: currentUser.username, 
+                masuk: waktuMasuk, 
+                keluar: waktuKeluar, 
+                durasi: dur, 
+                gaji: parseInt(gajiClean) || 0
+            }) 
+        });
+    }
+    document.getElementById('timer').innerText = "00:00:00";
+    document.getElementById('liveMoney').innerText = "Rp 0";
+    startTime = null;
+    updateUserStatusBadge();
+    showToast('✅ DATA KERJA TERSIMPAN!\nTerima kasih telah bekerja hari ini');
+    await loadAll();
+}
+async function deleteLog(lid) { await fetch(DB_URL.replace('.json', `logs/${lid}.json`), { method: 'DELETE' }); loadAll(); }
+async function sendFeedback() { const msg = document.getElementById('fbMsg').value, now = new Date(); await fetch(DB_URL.replace('.json', 'feedbacks.json'), { method: 'POST', body: JSON.stringify({pesan: msg, tgl: now.toLocaleDateString('id-ID'), hari: daftarHari[now.getDay()]}) }); document.getElementById('fbMsg').value = ""; alert("Pesan terkirim!"); loadAll(); }
+async function deletePen(pid) { await fetch(DB_URL.replace('.json', `penalties/${pid}.json`), { method: 'DELETE' }); loadAll(); }
+async function clearFeedbacks() { await fetch(DB_URL.replace('.json', 'feedbacks.json'), { method: 'DELETE' }); loadAll(); }
+async function saveFullUser(un) { const p = document.getElementById(`rp-${un}`).value, h = document.getElementById(`rh-${un}`).value, m = document.getElementById(`rm-${un}`).value, s = document.getElementById(`rs-${un}`).value, pass = document.getElementById(`editP-${un}`).value; await fetch(DB_URL.replace('.json', `users/${un}.json`), { method: 'PUT', body: JSON.stringify({ password: pass, role: un === 'admin' ? 'admin' : 'user', rP: p, rH: h, rM: m, rS: s }) }); loadAll(); }
+async function addUser() { const u = document.getElementById('newU').value, p = document.getElementById('newP').value, r = document.getElementById('newR').value; await fetch(DB_URL.replace('.json', `users/${u}.json`), { method: 'PUT', body: JSON.stringify({password:p, role:r, rP:0, rH:1, rM:0, rS:0}) }); await updateGlobalEmployeeStatus(u, "offline"); loadAll(); }
+async function sendPen() { 
+    const u = document.getElementById('penUser').value, l = document.getElementById('penLvl').value, n = document.getElementById('penNote').value;
+    const now = new Date();
+    const tanggal = now.toLocaleDateString('id-ID') + ' ' + now.toLocaleTimeString('id-ID');
+    const tglOnly = now.toLocaleDateString();
+    await fetch(DB_URL.replace('.json', 'penalties.json'), { 
+        method: 'POST', 
+        body: JSON.stringify({to:u, lv:l, msg:n, tanggal: tanggal, tglOnly: tglOnly}) 
+    }); 
+    document.getElementById('penNote').value = '';
+    loadAll(); 
+}
+async function setBC() { const msg = document.getElementById('bcMsgIn').value, link = document.getElementById('bcLinkIn').value; await fetch(DB_URL.replace('.json', 'bc.json'), { method: 'PUT', body: JSON.stringify({msg, link}) }); loadAll(); }
+async function deleteUser(un) { await fetch(DB_URL.replace('.json', `users/${un}.json`), { method: 'DELETE' }); await fetch(DB_URL.replace('.json', `employeeStatus/${un}.json`), { method: 'DELETE' }); loadAll(); }
+function createToastElement() { if (document.getElementById('customToast')) return; const toast = document.createElement('div'); toast.id = 'customToast'; document.body.appendChild(toast); }
+function showToast(message, isError = false) { createToastElement(); const toast = document.getElementById('customToast'); toast.innerHTML = message; toast.style.opacity = '1'; setTimeout(() => toast.style.opacity = '0', 2500); }
+
+// MULTI DEVICE SYNC (SAMA PERSIS)
+let realTimeSyncInterval = null, isHeartbeatRunning = false;
+function getDeviceId() { let id = localStorage.getItem('deviceId_' + (currentUser?.username || 'guest')); if (!id) { id = 'dev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8); if (currentUser) localStorage.setItem('deviceId_' + currentUser.username, id); } return id; }
+async function saveActiveSessionToCloud() { if (!currentUser || !startTime) return; const sessionData = { username: currentUser.username, startTime: startTime.toISOString(), isActive: true, lastUpdated: new Date().toISOString(), deviceId: getDeviceId() }; try { await fetch(DB_URL.replace('.json', `activeSessions/${currentUser.username}.json`), { method: 'PUT', body: JSON.stringify(sessionData) }); } catch(e) { console.error("Save session error:", e); } }
+async function removeActiveSessionFromCloud() { if (!currentUser) return; try { await fetch(DB_URL.replace('.json', `activeSessions/${currentUser.username}.json`), { method: 'DELETE' }); } catch(e) { console.error("Delete session error:", e); } }
+async function getActiveSessionFromCloud() { if (!currentUser) return null; try { const res = await fetch(DB_URL); const data = await res.json(); const session = data?.activeSessions?.[currentUser.username]; if (session && session.isActive === true && session.startTime) return { startTime: new Date(session.startTime), deviceId: session.deviceId }; } catch(e) { console.error("Load session error:", e); } return null; }
+async function forceStopThisDevice() { if (!currentUser || !startTime) return; if (timerInt) clearInterval(timerInt); const dur = document.getElementById('timer').innerText; const gajiRaw = document.getElementById('liveMoney').innerText; const gajiClean = gajiRaw.replace("Rp ", "").replace(/\./g, "").replace(/,/g, "").trim(); const formatTime24 = (date) => { const h = date.getHours().toString().padStart(2, '0'); const m = date.getMinutes().toString().padStart(2, '0'); const s = date.getSeconds().toString().padStart(2, '0'); return `${h}:${m}:${s}`; }; const masukWaktu = startTime ? formatTime24(startTime) : new Date().toLocaleTimeString(); const now = new Date(); const tgl = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`; startTime = null; localStorage.removeItem('workStartTime_' + currentUser.username); await updateEmpStatus("offline"); await updateGlobalEmployeeStatus(currentUser.username, "offline"); document.getElementById('timer').innerText = "00:00:00"; document.getElementById('liveMoney').innerText = "Rp 0"; document.getElementById('btnIn').disabled = false; document.getElementById('btnCad').disabled = false; document.getElementById('btnStopCad').disabled = true; document.getElementById('btnOut').disabled = true; updateUserStatusBadge(); if (dur !== "00:00:00") { await fetch(DB_URL.replace('.json', 'logs.json'), { method: 'POST', body: JSON.stringify({ tgl: tgl, nama: currentUser.username, masuk: masukWaktu, keluar: formatTime24(new Date()), durasi: dur, gaji: parseInt(gajiClean) || 0 }) }); await loadAll(); } showToast('⛔ Pekerjaan DIHENTIKAN dari device lain!\nKlik MULAI untuk mulai dari awal'); }
+async function syncTimerFromCloud() { if (!currentUser) return; try { const cloudSession = await getActiveSessionFromCloud(); const isLocalActive = (startTime !== null && startTime !== undefined); if (cloudSession && !isLocalActive) { startTime = cloudSession.startTime; localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString()); await updateEmpStatus("aktif"); await updateGlobalEmployeeStatus(currentUser.username, "aktif"); document.getElementById('btnIn').disabled = true; document.getElementById('btnOut').disabled = false; updateUserStatusBadge(); const rateRp = Number(currentUser.rP); const rateTotalSec = (Number(currentUser.rH) * 3600) + (Number(currentUser.rM) * 60) + Number(currentUser.rS); if (timerInt) clearInterval(timerInt); timerInt = setInterval(() => { if (!startTime) return; const diffSec = Math.floor((new Date() - startTime) / 1000); updateTimerDisplay(diffSec, rateTotalSec, rateRp); }, 1000); const elapsedSeconds = Math.floor((new Date() - startTime) / 1000); updateTimerDisplay(elapsedSeconds, rateTotalSec, rateRp); showToast('🔄 Sesi dipulihkan dari device lain'); return; } if (isLocalActive && !cloudSession) { const currentStatus = await fetch(DB_URL).then(r => r.json()).then(d => d?.employeeStatus?.[currentUser.username]?.status); if (currentStatus === 'aktif') await forceStopThisDevice(); return; } if (cloudSession && isLocalActive) { const remoteStartTime = cloudSession.startTime; const diffMs = Math.abs(remoteStartTime - startTime); if (diffMs > 2000) { startTime = remoteStartTime; localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString()); } } } catch(e) { console.error("Sync error:", e); } }
+function startRealTimeCloudSync() { if (realTimeSyncInterval) clearInterval(realTimeSyncInterval); realTimeSyncInterval = setInterval(() => { syncTimerFromCloud(); }, 1000); }
+function stopRealTimeCloudSync() { if (realTimeSyncInterval) { clearInterval(realTimeSyncInterval); realTimeSyncInterval = null; } }
+async function sessionHeartbeatToCloud() { if (!currentUser) return; try { const currentStatus = await fetch(DB_URL).then(r => r.json()).then(d => d?.employeeStatus?.[currentUser.username]?.status); if (currentStatus === 'aktif' && startTime) await saveActiveSessionToCloud(); } catch(e) { console.error("Heartbeat error:", e); } }
+const originalStopWorkSync = window.stopWork; window.stopWork = async function() { stopRealTimeCloudSync(); await removeActiveSessionFromCloud(); await originalStopWorkSync(); if (timerInt) { clearInterval(timerInt); timerInt = null; } startTime = null; };
+const originalStartWorkSync = window.startWork; window.startWork = async function() { await removeActiveSessionFromCloud(); await originalStartWorkSync(); await saveActiveSessionToCloud(); startRealTimeCloudSync(); };
+window.askStopWork = async function() { const ok = await openConfirm("Selesai Kerja", "Hentikan shift? SEMUA device dengan akun ini akan BERHENTI BERSAMAAN."); if(ok) await window.stopWork(); };
+window.askStartWork = async function() { const ok = await openConfirm("Konfirmasi Kerja", "Mulai bekerja? Waktu akan dimulai dari 00:00:00 dan SEMUA device akan SINKRON."); if(!ok) return; await window.startWork(); };
+const originalSetCadanganSync = window.setCadangan; window.setCadangan = async function() { const ok = await openConfirm("Status Cadangan", "Mode CADANGAN? Timer akan berhenti."); if(ok) { stopRealTimeCloudSync(); await removeActiveSessionFromCloud(); await originalSetCadanganSync(); } };
+const originalStopCadanganSync = window.stopCadangan; window.stopCadangan = async function() { const ok = await openConfirm("Berhenti dari Cadangan", "Keluar dari mode CADANGAN?"); if(ok) await originalStopCadanganSync(); };
+const originalShowAppSync = window.showApp; window.showApp = async function() { await originalShowAppSync(); setTimeout(async () => { if (!currentUser) return; const cloudSession = await getActiveSessionFromCloud(); if (cloudSession && !startTime) { startTime = cloudSession.startTime; localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString()); await updateEmpStatus("aktif"); await updateGlobalEmployeeStatus(currentUser.username, "aktif"); document.getElementById('btnIn').disabled = true; document.getElementById('btnOut').disabled = false; updateUserStatusBadge(); const rateRp = Number(currentUser.rP); const rateTotalSec = (Number(currentUser.rH) * 3600) + (Number(currentUser.rM) * 60) + Number(currentUser.rS); if (timerInt) clearInterval(timerInt); timerInt = setInterval(() => { if (!startTime) return; const diffSec = Math.floor((new Date() - startTime) / 1000); updateTimerDisplay(diffSec, rateTotalSec, rateRp); }, 1000); const elapsedSeconds = Math.floor((new Date() - startTime) / 1000); updateTimerDisplay(elapsedSeconds, rateTotalSec, rateRp); startRealTimeCloudSync(); showToast('🔄 Sesi dipulihkan dari device lain'); } else { await checkCurrentStatusAndSetButtons(); } }, 2000); };
+if (!isHeartbeatRunning) { isHeartbeatRunning = true; setInterval(() => { sessionHeartbeatToCloud(); }, 5000); }
+window.addEventListener('online', async () => { if (currentUser) { const cloudSession = await getActiveSessionFromCloud(); if (cloudSession && !startTime) location.reload(); } });
+
+// ==================== FITUR INFORMASI SUBBAB (SAMA PERSIS) ====================
+let infoSections = [];
+let editingSectionId = null;
+let tempItems = [];
+let currentOpenSectionId = null;
+const defaultFischItems = [
+    { name: "Rod Of The Eternal King", requirements: ["2 Golden Sea pearl (diutamakan non mutasi)", "3 Inferno Wood"] },
+    { name: "Rod Of The Exalted One", requirements: ["Attanean Enchant Relic", "Crystalized Enchant Relic", "Fossilized Enchant Relic", "Greedy Enchant Relic", "Hexed Enchant Relic", "Mosaic Enchant Relic", "Translucent Enchant Relic"] },
+    { name: "Poseidon Rod", requirements: ["Ancient Megalodon", "Great Hammerhead Shark", "Great White Shark", "Ginsu Shark", "Whale Shark (Selain Shiny Blessed / Shiny Mosaic)", "Icebeard Shark"] },
+    { name: "Onirflax Rod", requirements: ["Wrath Scylla", "Shiny Sparkling Wrath Floppy", "Charred Boot"] },
+    { name: "Leviathan Hunt Set", requirements: ["1 Aurora Cathulith", "1 Purified Cathulith", "1 Solarblaze Cathulid", "1 Rainbow Cluster Cathulith", "1 Nova Cathulith"] },
+    { name: "ToxInburset Set Rod", requirements: ["2 Toxic Widow Bloom", "1 Toxic Jellymass", "1 Decayed Venom Maw", "1 Giant Blight Pufferfish"] },
+    { name: "Season Rod Set", requirements: ["2 Opal", "3 Frozen driftwood"] },
+    { name: "Riptide Rod Set", requirements: ["3 Ruby", "3 Atlantean driftwood"] },
+    { name: "Resourceful Rod Set", requirements: ["3 Amethyst", "2 Lunar driftwood"] },
+    { name: "Splitblindner Rod Set", requirements: ["2 Spirit Sea Mine", "3 Spirit Speed Core"] },
+    { name: "Requiem Rod Set", requirements: ["2 Awakaened Omnithal", "1 Omnithal", "1 Fossilised Plesiosaurus", "1 Fallen Flying Gurnard"] },
+    { name: "Celestial Rod Set", requirements: ["2 Moonstone (Selain Mutasi Mourned)", "3 Moon Wood"] },
+    { name: "Set Elder Mossripper Rod", requirements: ["1 Shrouded Golden Sea Pearl", "1 Elder Mossripper"] },
+    { name: "Rod Of The Forgotten Fang Set", requirements: ["2 Meg’s Fang", "2 Meg’s Spine"] },
+    { name: "Preclusion Rod Set", requirements: ["1 Amethyst", "2 Driftwood (Non Mutasi)"] },
+    { name: "The Lost Rod Set", requirements: ["3 Lapis Lazuli", "3 Ancient Wood"] },
+    { name: "Tidemurner Rod Set", requirements: ["5 Iron Chunk", "1 Mourned Moonstone"] },
+    { name: "Vineweaver Rod Set", requirements: ["1 Vined Driftwood", "1 Vined Mauve Pearl"] },
+    { name: "Voyager Rod Set", requirements: ["3 Opal", "3 Void Wood"] },
+    { name: "Wisdom Rod Set", requirements: ["1 Ruby", "2 Mythical Driftwood"] },
+    { name: "Lucid Rod Set", requirements: ["1 Cursed Touch Scrap Metal", "1 Cursed Touch Cathulid"] },
+    { name: "Glimmersuit Boots", requirements: ["1 Boots", "1 Rocketfuel", "1 Speed core (Non Mutasi)"] }
+];
+async function loadInfoSections() {
+    try {
+        const res = await fetch(DB_URL);
+        const data = await res.json();
+        if (data.infoSections && Object.keys(data.infoSections).length > 0) {
+            infoSections = Object.entries(data.infoSections).map(([id, val]) => ({ id, ...val }));
+        } else {
+            const defaultSection = { title: "Fisch", items: defaultFischItems };
+            const newId = Date.now().toString();
+            await fetch(DB_URL.replace('.json', `infoSections/${newId}.json`), { method: 'PUT', body: JSON.stringify(defaultSection) });
+            infoSections = [{ id: newId, ...defaultSection }];
+        }
+    } catch(e) {
+        console.error("Error loading info sections:", e);
+        infoSections = [{ id: "local_fisch", title: "Fisch", items: defaultFischItems }];
+    }
+    renderInfoTabs();
+}
+async function saveInfoSectionsToDB() {
+    for (let section of infoSections) {
+        if (section.id === "local_fisch") continue;
+        await fetch(DB_URL.replace('.json', `infoSections/${section.id}.json`), { method: 'PUT', body: JSON.stringify({ title: section.title, items: section.items }) });
+    }
+}
+function renderInfoTabs() {
+    const subnavContainer = document.getElementById('infoSubnavContainer');
+    const contentContainer = document.getElementById('infoContentContainer');
+    if (!subnavContainer) return;
+    subnavContainer.innerHTML = '';
+    contentContainer.innerHTML = '<div class="placeholder-message">📌 Pilih subbab di atas</div>';
+    currentOpenSectionId = null;
+    infoSections.forEach((section) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'info-subnav-item';
+        const btn = document.createElement('button');
+        btn.textContent = section.title;
+        btn.classList.add('info-sub-btn');
+        btn.setAttribute('data-section-id', section.id);
+        btn.onclick = () => {
+            if (currentOpenSectionId === section.id) {
+                closeAllSections();
+                currentOpenSectionId = null;
+            } else {
+                closeAllSections();
+                btn.classList.add('active-sub');
+                showSectionContent(section.id);
+                currentOpenSectionId = section.id;
+            }
+        };
+        wrapper.appendChild(btn);
+        if (currentUser && currentUser.role === 'admin') {
+            const delBtn = document.createElement('button');
+            delBtn.textContent = '🗑️';
+            delBtn.className = 'delete-sub-btn';
+            delBtn.onclick = async (e) => {
+                e.stopPropagation();
+                const ok = await openConfirm("Hapus Subbab", `Hapus "${section.title}"?`);
+                if (ok) {
+                    await fetch(DB_URL.replace('.json', `infoSections/${section.id}.json`), { method: 'DELETE' });
+                    infoSections = infoSections.filter(s => s.id !== section.id);
+                    renderInfoTabs();
+                    showToast(`✅ Subbab "${section.title}" dihapus`);
+                }
+            };
+            wrapper.appendChild(delBtn);
+        }
+        subnavContainer.appendChild(wrapper);
+    });
+}
+function closeAllSections() {
+    document.querySelectorAll('.info-sub-btn').forEach(btn => btn.classList.remove('active-sub'));
+    document.querySelectorAll('.info-content').forEach(div => div.classList.remove('active-info'));
+    const contentContainer = document.getElementById('infoContentContainer');
+    if (contentContainer) contentContainer.innerHTML = '<div class="placeholder-message">📌 Pilih subbab di atas</div>';
+}
+function showSectionContent(sectionId) {
+    const section = infoSections.find(s => s.id === sectionId);
+    if (!section) return;
+    const contentContainer = document.getElementById('infoContentContainer');
+    let existingDiv = document.getElementById(`info-content-${sectionId}`);
+    if (!existingDiv) {
+        existingDiv = document.createElement('div');
+        existingDiv.id = `info-content-${sectionId}`;
+        existingDiv.className = 'info-content active-info';
+        contentContainer.innerHTML = '';
+        contentContainer.appendChild(existingDiv);
+    } else {
+        document.querySelectorAll('.info-content').forEach(div => div.classList.remove('active-info'));
+        existingDiv.classList.add('active-info');
+    }
+    existingDiv.innerHTML = renderSectionContent(section);
+    const searchInput = existingDiv.querySelector(`#search-${sectionId}`);
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => filterSectionRealTime(sectionId, e.target.value));
+    }
+}
+function renderSectionContent(section) {
+    return `
+        <div class="search-bar">
+            <input type="text" id="search-${section.id}" placeholder="Cari paket atau item..." autocomplete="off">
+            ${currentUser?.role === 'admin' ? `<button class="btn-secondary" onclick="openEditSectionModal('${section.id}')">Edit Subbab</button>` : ''}
+        </div>
+        <div id="grid-${section.id}" class="info-fisch-grid">
+            ${renderItemsGrid(section.items, '')}
+        </div>
+    `;
+}
+function renderItemsGrid(items, searchTerm) {
+    if (!items || items.length === 0) return '<p>Tidak ada data. Klik Edit untuk menambahkan paket.</p>';
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) {
+        return items.map(item => `
+            <div class="info-fisch-card">
+                <h4>${escapeHtml(item.name)}</h4>
+                <ul>${item.requirements.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>
+            </div>
+        `).join('');
+    }
+    const filtered = items.filter(item => item.name.toLowerCase().includes(term) || item.requirements.some(r => r.toLowerCase().includes(term)));
+    if (!filtered.length) return '<p>Tidak ditemukan.</p>';
+    return filtered.map(item => `
+        <div class="info-fisch-card">
+            <h4>${escapeHtml(item.name)}</h4>
+            <ul>${item.requirements.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>
+        </div>
+    `).join('');
+}
+function filterSectionRealTime(sectionId, term) {
+    const section = infoSections.find(s => s.id === sectionId);
+    if (section) {
+        const grid = document.getElementById(`grid-${sectionId}`);
+        if (grid) grid.innerHTML = renderItemsGrid(section.items, term);
+    }
+}
+function escapeHtml(str) {
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+function showAddSectionModal() {
+    if (currentUser?.role !== 'admin') return;
+    document.getElementById('newSectionTitle').value = '';
+    document.getElementById('addSectionModal').style.display = 'flex';
+}
+function closeAddSectionModal() { document.getElementById('addSectionModal').style.display = 'none'; }
+async function confirmAddSection() {
+    const newTitle = document.getElementById('newSectionTitle').value.trim();
+    if (!newTitle) { alert("Judul tidak boleh kosong"); return; }
+    if (infoSections.some(s => s.title.toLowerCase() === newTitle.toLowerCase())) { alert("Sudah ada"); return; }
+    const newId = Date.now().toString();
+    const newSection = { title: newTitle, items: [{ name: "Contoh Paket", requirements: ["Contoh item 1", "Contoh item 2"] }] };
+    await fetch(DB_URL.replace('.json', `infoSections/${newId}.json`), { method: 'PUT', body: JSON.stringify(newSection) });
+    infoSections.push({ id: newId, ...newSection });
+    renderInfoTabs();
+    closeAddSectionModal();
+    showToast(`✅ Subbab "${newTitle}" ditambahkan`);
+}
+function openEditSectionModal(sectionId) {
+    if (currentUser?.role !== 'admin') return;
+    const section = infoSections.find(s => s.id === sectionId);
+    if (!section) return;
+    editingSectionId = sectionId;
+    document.getElementById('editSectionName').value = section.title;
+    tempItems = JSON.parse(JSON.stringify(section.items));
+    renderItemsEditor();
+    document.getElementById('editSectionModal').style.display = 'flex';
+}
+function renderItemsEditor() {
+    const container = document.getElementById('itemsEditor');
+    if (!container) return;
+    container.innerHTML = '';
+    tempItems.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.style.marginBottom = '15px';
+        div.style.padding = '10px';
+        div.style.border = '1px solid var(--border)';
+        div.style.borderRadius = '8px';
+        div.innerHTML = `
+            <div style="display:flex; gap:10px; margin-bottom:8px;">
+                <input type="text" placeholder="Nama Paket" value="${escapeHtml(item.name)}" style="flex:2;" class="item-name-input" data-idx="${idx}">
+                <button type="button" class="btn-warning" onclick="removeItemField(${idx})">Hapus</button>
+            </div>
+            <div class="requirements-container">
+                ${item.requirements.map((req, ridx) => `
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <input type="text" value="${escapeHtml(req)}" style="flex:1;" class="req-input" data-idx="${idx}" data-req-idx="${ridx}">
+                        <button type="button" class="btn-no" onclick="removeRequirementField(${idx}, ${ridx})">✖</button>
+                    </div>
+                `).join('')}
+                <button type="button" class="btn-secondary" onclick="addRequirementField(${idx})">+ Tambah Item</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+    document.querySelectorAll('.item-name-input').forEach(inp => {
+        inp.addEventListener('change', (e) => {
+            const i = parseInt(e.target.getAttribute('data-idx'));
+            if (!isNaN(i) && tempItems[i]) tempItems[i].name = e.target.value;
+        });
+    });
+    document.querySelectorAll('.req-input').forEach(inp => {
+        inp.addEventListener('change', (e) => {
+            const i = parseInt(e.target.getAttribute('data-idx'));
+            const ri = parseInt(e.target.getAttribute('data-req-idx'));
+            if (!isNaN(i) && !isNaN(ri) && tempItems[i] && tempItems[i].requirements[ri]) {
+                tempItems[i].requirements[ri] = e.target.value;
+            }
+        });
+    });
+}
+window.addNewItemField = function() {
+    tempItems.push({ name: "Paket Baru", requirements: ["Item 1"] });
+    renderItemsEditor();
+};
+window.removeItemField = function(idx) {
+    tempItems.splice(idx, 1);
+    renderItemsEditor();
+};
+window.addRequirementField = function(itemIdx) {
+    if (tempItems[itemIdx]) tempItems[itemIdx].requirements.push("Item baru");
+    renderItemsEditor();
+};
+window.removeRequirementField = function(itemIdx, reqIdx) {
+    if (tempItems[itemIdx]) tempItems[itemIdx].requirements.splice(reqIdx, 1);
+    renderItemsEditor();
+};
+async function saveSectionChanges() {
+    const newTitle = document.getElementById('editSectionName').value.trim();
+    if (!newTitle) { alert("Judul tidak boleh kosong"); return; }
+    const updatedItems = [];
+    const itemDivs = document.querySelectorAll('#itemsEditor > div');
+    for (let i = 0; i < itemDivs.length; i++) {
+        const nameInput = itemDivs[i].querySelector('.item-name-input');
+        const name = nameInput ? nameInput.value.trim() : '';
+        if (!name) continue;
+        const reqInputs = itemDivs[i].querySelectorAll('.req-input');
+        const reqs = [];
+        reqInputs.forEach(inp => {
+            const v = inp.value.trim();
+            if (v) reqs.push(v);
+        });
+        updatedItems.push({ name, requirements: reqs });
+    }
+    if (updatedItems.length === 0) { alert("Minimal satu paket harus diisi"); return; }
+    const ok = await openConfirm("Simpan Perubahan", `Simpan perubahan untuk subbab "${newTitle}"?`);
+    if (!ok) return;
+    const index = infoSections.findIndex(s => s.id === editingSectionId);
+    if (index !== -1) {
+        infoSections[index].title = newTitle;
+        infoSections[index].items = updatedItems;
+        await saveInfoSectionsToDB();
+        renderInfoTabs();
+        const btn = document.querySelector(`.info-sub-btn[data-section-id="${editingSectionId}"]`);
+        if (btn) btn.click();
+    }
+    closeEditSectionModal();
+    showToast("✅ Subbab berhasil diperbarui!");
+}
+function closeEditSectionModal() {
+    document.getElementById('editSectionModal').style.display = 'none';
+    editingSectionId = null;
+    tempItems = [];
+}
+window.showAddSectionModal = showAddSectionModal;
+window.closeAddSectionModal = closeAddSectionModal;
+window.confirmAddSection = confirmAddSection;
+window.openEditSectionModal = openEditSectionModal;
+window.closeEditSectionModal = closeEditSectionModal;
+window.saveSectionChanges = saveSectionChanges;
+window.addNewItemField = addNewItemField;
+window.removeItemField = removeItemField;
+window.addRequirementField = addRequirementField;
+window.removeRequirementField = removeRequirementField;
+
+// ==================== FITUR TAMBAH RIWAYAT KERJA MANUAL ====================
+async function showAddLogModal() {
+    if(currentUser?.role !== 'admin') return;
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    const users = data?.users || {};
+    const selectEmp = document.getElementById('addLogEmployee');
+    selectEmp.innerHTML = Object.keys(users).filter(un => un !== 'admin').map(un => `<option value="${un}">${un}</option>`).join('');
+    if(selectEmp.options.length === 0) selectEmp.innerHTML = '<option disabled>Tidak ada karyawan</option>';
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('addLogDate').value = today;
+    document.getElementById('addLogTimeIn').value = '09:00';
+    document.getElementById('addLogTimeOut').value = '17:00';
+    document.getElementById('addLogModal').style.display = 'flex';
+}
+function closeAddLogModal() {
+    document.getElementById('addLogModal').style.display = 'none';
+}
+async function saveNewLog() {
+    const selectedEmployee = document.getElementById('addLogEmployee').value;
+    if(!selectedEmployee) { alert('Pilih karyawan!'); return; }
+    const dateInput = document.getElementById('addLogDate').value;
+    const timeIn = document.getElementById('addLogTimeIn').value + ':00';
+    const timeOut = document.getElementById('addLogTimeOut').value + ':00';
+    if(!dateInput) { alert('Tanggal harus diisi!'); return; }
+    const newTgl = dateInput;
+    const [inH, inM, inS] = timeIn.split(':').map(Number);
+    const [outH, outM, outS] = timeOut.split(':').map(Number);
+    let startSeconds = (inH * 3600) + (inM * 60) + inS;
+    let endSeconds = (outH * 3600) + (outM * 60) + outS;
+    if(endSeconds < startSeconds) endSeconds += 24 * 3600;
+    const durasiDetik = endSeconds - startSeconds;
+    if(durasiDetik < 0) { alert('Jam keluar tidak valid!'); return; }
+    const durH = Math.floor(durasiDetik / 3600);
+    const durM = Math.floor((durasiDetik % 3600) / 60);
+    const durS = durasiDetik % 60;
+    const newDurasi = `${durH.toString().padStart(2,'0')}:${durM.toString().padStart(2,'0')}:${durS.toString().padStart(2,'0')}`;
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    const users = data?.users || {};
+    const userRate = users[selectedEmployee];
+    if(!userRate) { alert('Data rate karyawan tidak ditemukan!'); return; }
+    const rP = Number(userRate.rP) || 0;
+    const rH = Number(userRate.rH) || 0;
+    const rM = Number(userRate.rM) || 0;
+    const rS = Number(userRate.rS) || 0;
+    const rateTotalSec = (rH * 3600) + (rM * 60) + rS;
+    let newGaji = 0;
+    if(rateTotalSec > 0) newGaji = Math.floor((durasiDetik / rateTotalSec) * rP);
+    const ok = await openConfirm('Tambah Riwayat', `Anda akan menambahkan data:\nKaryawan: ${selectedEmployee}\nTanggal: ${newTgl}\nMasuk: ${timeIn}\nKeluar: ${timeOut}\nDurasi: ${newDurasi}\nGaji: Rp ${newGaji.toLocaleString('id-ID')}\n\nLanjutkan?`);
+    if(!ok) return;
+    try {
+        await fetch(DB_URL.replace('.json', 'logs.json'), {
+            method: 'POST',
+            body: JSON.stringify({ nama: selectedEmployee, tgl: newTgl, masuk: timeIn, keluar: timeOut, durasi: newDurasi, gaji: newGaji })
+        });
+        showToast('✅ Riwayat kerja berhasil ditambahkan!');
+        closeAddLogModal();
+        await loadAll();
+    } catch(error) { alert('Terjadi kesalahan saat menyimpan.'); }
+}
+window.showAddLogModal = showAddLogModal;
+window.closeAddLogModal = closeAddLogModal;
+window.saveNewLog = saveNewLog;
+
+// ==================== KODE TAMBAHAN UNTUK LOGIN ====================
+let statsInterval = null;
+function calcDuration(startISO) {
+    if (!startISO) return "00:00:00";
+    const start = new Date(startISO);
+    const now = new Date();
+    let diff = Math.max(0, Math.floor((now - start) / 1000));
+    let h = Math.floor(diff/3600).toString().padStart(2,'0');
+    let m = Math.floor((diff%3600)/60).toString().padStart(2,'0');
+    let s = (diff%60).toString().padStart(2,'0');
+    return `${h}:${m}:${s}`;
+}
+async function loadUserCardsAndStats() {
+    try {
+        const res = await fetch(DB_URL);
+        const data = await res.json();
+        const users = data?.users || {};
+        const employeeStatus = data?.employeeStatus || {};
+        const activeSessions = data?.activeSessions || {};
+        const userList = Object.entries(users).map(([un, val]) => ({ username: un, role: val.role || 'user', password: val.password }));
+        const container = document.getElementById('userCardsContainer');
+        if (container) {
+            if (userList.length === 0) {
+                container.innerHTML = '<div>Belum ada karyawan</div>';
+            } else {
+                container.innerHTML = userList.map(user => `
+                    <div class="user-card" data-username="${user.username}" data-password="${user.password}">
+                        <div class="card-avatar">👤</div>
+                        <div class="card-username">${escapeHtml(user.username)}</div>
+                        <div class="card-role">${user.role === 'admin' ? 'OWNER' : 'STAFF'}</div>
+                    </div>
+                `).join('');
+                if (!userList.some(u => u.username === 'admin')) {
+                    const adminCard = document.createElement('div');
+                    adminCard.className = 'user-card';
+                    adminCard.setAttribute('data-username', 'admin');
+                    adminCard.setAttribute('data-password', '123');
+                    adminCard.innerHTML = '<div class="card-avatar">👑</div><div class="card-username">admin</div><div class="card-role">OWNER</div>';
+                    container.appendChild(adminCard);
+                }
+                document.querySelectorAll('.user-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const username = card.getAttribute('data-username');
+                        window._tempSelectedUser = username;
+                        document.getElementById('modalUsernameDisplay').innerText = username;
+                        document.getElementById('modalPasswordInput').value = '';
+                        document.getElementById('passwordModal').style.display = 'flex';
+                    });
+                });
+            }
+        }
+        updateStatsUI(users, employeeStatus, activeSessions);
+    } catch(e) { console.error(e); }
+}
+async function updateStatsUI(users, employeeStatus, activeSessions) {
+    let onlineUsers = [], cadanganUsers = [];
+    let totalStaff = 0;
+    for (const [un, usr] of Object.entries(users)) {
+        if (usr.role !== 'admin') totalStaff++;
+        const statusData = employeeStatus?.[un] || {};
+        const status = statusData.status || 'offline';
+        if (status === 'aktif') {
+            let dur = "00:00:00";
+            const sess = activeSessions?.[un];
+            if (sess && sess.startTime) dur = calcDuration(sess.startTime);
+            onlineUsers.push({ name: un, duration: dur });
+        } else if (status === 'cadangan') {
+            cadanganUsers.push({ name: un });
+        }
+    }
+    document.getElementById('onlineCount').innerText = onlineUsers.length;
+    document.getElementById('cadanganCount').innerText = cadanganUsers.length;
+    document.getElementById('totalStaffCount').innerText = totalStaff;
+    const onlineDiv = document.getElementById('onlineList');
+    if (onlineUsers.length === 0) onlineDiv.innerHTML = '<div>Tidak ada online</div>';
+    else {
+        onlineDiv.innerHTML = onlineUsers.map((u, i) => `
+            <div class="stat-list-item online-item">
+                <span class="stat-list-name">${i+1}. ${u.name}</span>
+                <span class="stat-list-duration">${u.duration}</span>
+            </div>
+        `).join('');
+    }
+    const cadanganDiv = document.getElementById('cadanganList');
+    if (cadanganUsers.length === 0) cadanganDiv.innerHTML = '<div>Tidak ada cadangan</div>';
+    else {
+        cadanganDiv.innerHTML = cadanganUsers.map((u, i) => `
+            <div class="stat-list-item cadangan-item">
+                <span class="stat-list-name">${i+1}. ${u.name}</span>
+                <span>⏳ cadangan</span>
+            </div>
+        `).join('');
+    }
+}
+async function refreshStatsPeriodic() {
+    if (document.getElementById('loginPage') && document.getElementById('loginPage').style.display !== 'none') {
+        try {
+            const res = await fetch(DB_URL);
+            const data = await res.json();
+            const users = data?.users || {};
+            const employeeStatus = data?.employeeStatus || {};
+            const activeSessions = data?.activeSessions || {};
+            updateStatsUI(users, employeeStatus, activeSessions);
+            const currentCards = document.querySelectorAll('.user-card').length;
+            if (Object.keys(users).length !== currentCards) loadUserCardsAndStats();
+        } catch(e) {}
+    }
+}
+function startRealtimeStatsTimer() {
+    if (statsInterval) clearInterval(statsInterval);
+    statsInterval = setInterval(refreshStatsPeriodic, 1500);
+}
+async function attemptLoginWithPassword(username, password) {
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    const users = data?.users || {};
+    if (username === 'admin' && password === '123') {
+        currentUser = { username: 'admin', role: 'admin' };
+        proceedToMainApp();
+        return true;
+    }
+    if (users[username] && users[username].password === password) {
+        currentUser = { username: username, ...users[username] };
+        if (data.maintenance_mode === true && currentUser.role !== 'admin') {
+            alert("Sistem sedang maintenance");
+            return false;
+        }
+        proceedToMainApp();
+        return true;
+    } else {
+        alert("❌ Password salah!");
+        return false;
+    }
+}
+function proceedToMainApp() {
+    document.getElementById('passwordModal').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('animatedBg').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    if (statsInterval) clearInterval(statsInterval);
+    if (typeof showApp === 'function') {
+        showApp();
+        startPopup();
+    } else {
+        console.warn("showApp tidak ditemukan! Pastikan kode asli absensi sudah dimuat.");
+    }
+}
+function bindModalEvents() {
+    const modal = document.getElementById('passwordModal');
+    document.getElementById('closeModalBtn').onclick = () => { modal.style.display = 'none'; };
+    document.getElementById('confirmLoginBtn').onclick = async () => {
+        const pwd = document.getElementById('modalPasswordInput').value;
+        if (window._tempSelectedUser) {
+            await attemptLoginWithPassword(window._tempSelectedUser, pwd);
+        } else {
+            alert("Pilih karyawan terlebih dahulu");
+        }
+    };
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+}
+window.addEventListener('DOMContentLoaded', async () => {
+    await loadUserCardsAndStats();
+    startRealtimeStatsTimer();
+    bindModalEvents();
+});
+</script>
+</body>
+</html>
