@@ -1056,13 +1056,13 @@ function displayPenaltyHistory() {
         const levelClass = getPenaltyClass(pen.lv);
         const tanggal = pen.tanggal || new Date().toLocaleDateString('id-ID');
         html += `<tr>
-                            <td>${no++}</td>
-                            <td>${tanggal}</td>
-                            <td><strong>${pen.to}</strong></td>
-                            <td><span class="penalti-item ${levelClass}">${levelName}</span></td>
-                            <td>${pen.msg || '-'}</td>
-                            <td><button class="btn-delete-penalty" onclick="askDelPen('${pen.id}')">Hapus</button></td>
-                        </tr>`;
+                             <td>${no++}</td>
+                             <td>${tanggal}</td>
+                             <td><strong>${pen.to}</strong></td>
+                             <td><span class="penalti-item ${levelClass}">${levelName}</span></td>
+                             <td>${pen.msg || '-'}</td>
+                             <td><button class="btn-delete-penalty" onclick="askDelPen('${pen.id}')">Hapus</button></td>
+                         </tr>`;
     });
     tbody.innerHTML = html || '<tr><td colspan="6">Belum ada riwayat penalti</td></tr>';
 }
@@ -1256,11 +1256,11 @@ async function loadEmployeeStatusTable() {
         else if(status === 'cadangan') { statusClass = 'status-cadangan'; statusText = '🟡 CADANGAN'; }
         else { statusClass = 'status-offline'; statusText = '🔴 OFFLINE'; }
         html += `<tr>
-                            <td>${no++}</td>
-                            <td><strong>${username}</strong></td>
+                             <td>${no++}</td>
+                             <td><strong>${username}</strong></td>
                         <td class="status-cell"><span class="status-badge ${statusClass}">${statusText}</span></td>
-                            <td>${lastUpdate}</td>
-                        </tr>`;
+                             <td>${lastUpdate}</td>
+                         </tr>`;
     }
     tbody.innerHTML = html;
 }
@@ -1438,7 +1438,7 @@ function refreshHistoryDisplay() {
         const masukDisplay = formatTimeTo24HMS(l.masuk);
         const keluarDisplay = formatTimeTo24HMS(l.keluar);
         html += `<tr>
-                           <td>${dayName}, ${displayDate}</td>
+                            <td>${dayName}, ${displayDate}</td>
                             <td>${namaDisplay}</td>
                             <td>${masukDisplay}</td>
                             <td>${keluarDisplay}</td>
@@ -1446,7 +1446,7 @@ function refreshHistoryDisplay() {
                             <td>Rp ${Number(l.gaji).toLocaleString()}</td>
                             <td><div style="display:flex; flex-wrap:wrap; gap:4px;">${pens || '-'}</div></td>
                          ${actionTd}
-                        </tr>`;
+                         </tr>`;
     });
     tbody.innerHTML = html || '<tr><td colspan="8">Tidak ada data untuk filter ini</td></tr>';
 }
@@ -1692,7 +1692,23 @@ function getDeviceId() { let id = localStorage.getItem('deviceId_' + (currentUse
 async function saveActiveSessionToCloud() { if (!currentUser || !startTime) return; const sessionData = { username: currentUser.username, startTime: startTime.toISOString(), isActive: true, lastUpdated: new Date().toISOString(), deviceId: getDeviceId() }; try { await fetch(DB_URL.replace('.json', `activeSessions/${currentUser.username}.json`), { method: 'PUT', body: JSON.stringify(sessionData) }); } catch(e) { console.error("Save session error:", e); } }
 async function removeActiveSessionFromCloud() { if (!currentUser) return; try { await fetch(DB_URL.replace('.json', `activeSessions/${currentUser.username}.json`), { method: 'DELETE' }); } catch(e) { console.error("Delete session error:", e); } }
 async function getActiveSessionFromCloud() { if (!currentUser) return null; try { const res = await fetch(DB_URL); const data = await res.json(); const session = data?.activeSessions?.[currentUser.username]; if (session && session.isActive === true && session.startTime) return { startTime: new Date(session.startTime), deviceId: session.deviceId }; } catch(e) { console.error("Load session error:", e); } return null; }
-async function forceStopThisDevice() { if (!currentUser || !startTime) return; if (timerInt) clearInterval(timerInt); const dur = document.getElementById('timer').innerText; const gajiRaw = document.getElementById('liveMoney').innerText; const gajiClean = gajiRaw.replace("Rp ", "").replace(/\./g, "").replace(/,/g, "").trim(); const formatTime24 = (date) => { const h = date.getHours().toString().padStart(2, '0'); const m = date.getMinutes().toString().padStart(2, '0'); const s = date.getSeconds().toString().padStart(2, '0'); return `${h}:${m}:${s}`; }; const masukWaktu = startTime ? formatTime24(startTime) : new Date().toLocaleTimeString(); const now = new Date(); const tgl = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`; startTime = null; localStorage.removeItem('workStartTime_' + currentUser.username); await updateEmpStatus("offline"); await updateGlobalEmployeeStatus(currentUser.username, "offline"); document.getElementById('timer').innerText = "00:00:00"; document.getElementById('liveMoney').innerText = "Rp 0"; document.getElementById('btnIn').disabled = false; document.getElementById('btnCad').disabled = false; document.getElementById('btnStopCad').disabled = true; document.getElementById('btnOut').disabled = true; updateUserStatusBadge(); if (dur !== "00:00:00") { await fetch(DB_URL.replace('.json', 'logs.json'), { method: 'POST', body: JSON.stringify({ tgl: tgl, nama: currentUser.username, masuk: masukWaktu, keluar: formatTime24(new Date()), durasi: dur, gaji: parseInt(gajiClean) || 0 }) }); await loadAll(); } showToast('⛔ Pekerjaan DIHENTIKAN dari device lain!\nKlik MULAI untuk mulai dari awal'); }
+async function forceStopThisDevice() {
+    if (!currentUser || !startTime) return;
+    if (timerInt) clearInterval(timerInt);
+    // Hanya reset state lokal, TIDAK menyimpan log (karena sudah disimpan oleh device yang melakukan stop manual)
+    startTime = null;
+    localStorage.removeItem('workStartTime_' + currentUser.username);
+    await updateEmpStatus("offline");
+    await updateGlobalEmployeeStatus(currentUser.username, "offline");
+    document.getElementById('timer').innerText = "00:00:00";
+    document.getElementById('liveMoney').innerText = "Rp 0";
+    document.getElementById('btnIn').disabled = false;
+    document.getElementById('btnCad').disabled = false;
+    document.getElementById('btnStopCad').disabled = true;
+    document.getElementById('btnOut').disabled = true;
+    updateUserStatusBadge();
+    showToast('⛔ Pekerjaan DIHENTIKAN dari device lain!\nKlik MULAI untuk mulai dari awal');
+}
 async function syncTimerFromCloud() { if (!currentUser) return; try { const cloudSession = await getActiveSessionFromCloud(); const isLocalActive = (startTime !== null && startTime !== undefined); if (cloudSession && !isLocalActive) { startTime = cloudSession.startTime; localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString()); await updateEmpStatus("aktif"); await updateGlobalEmployeeStatus(currentUser.username, "aktif"); document.getElementById('btnIn').disabled = true; document.getElementById('btnOut').disabled = false; updateUserStatusBadge(); const rateRp = Number(currentUser.rP); const rateTotalSec = (Number(currentUser.rH) * 3600) + (Number(currentUser.rM) * 60) + Number(currentUser.rS); if (timerInt) clearInterval(timerInt); timerInt = setInterval(() => { if (!startTime) return; const diffSec = Math.floor((new Date() - startTime) / 1000); updateTimerDisplay(diffSec, rateTotalSec, rateRp); }, 1000); const elapsedSeconds = Math.floor((new Date() - startTime) / 1000); updateTimerDisplay(elapsedSeconds, rateTotalSec, rateRp); showToast('🔄 Sesi dipulihkan dari device lain'); return; } if (isLocalActive && !cloudSession) { const currentStatus = await fetch(DB_URL).then(r => r.json()).then(d => d?.employeeStatus?.[currentUser.username]?.status); if (currentStatus === 'aktif') await forceStopThisDevice(); return; } if (cloudSession && isLocalActive) { const remoteStartTime = cloudSession.startTime; const diffMs = Math.abs(remoteStartTime - startTime); if (diffMs > 2000) { startTime = remoteStartTime; localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString()); } } } catch(e) { console.error("Sync error:", e); } }
 function startRealTimeCloudSync() { if (realTimeSyncInterval) clearInterval(realTimeSyncInterval); realTimeSyncInterval = setInterval(() => { syncTimerFromCloud(); }, 1000); }
 function stopRealTimeCloudSync() { if (realTimeSyncInterval) { clearInterval(realTimeSyncInterval); realTimeSyncInterval = null; } }
