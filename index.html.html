@@ -728,7 +728,7 @@
             <p><strong>Aturan Penting:</strong><br>> Update harga setiap 10 menit sekali dengan batas maksimal 1 jam sekali.<br>> Selalu cross-check item yang akan di-trade dengan pembeli.<br>> Pastikan data absensi diisi dengan jujur dan bertanggung jawab. Laporkan kendala segera ke admin utama.</p>
             <div class="footer-thanks">
                 Terima kasih atas kerja sama dan dedikasi tim MMR Store.<br>
-                <span class="developer-credit">M Fadil Sanjaya<br>V 1.0.3 (beta)</span>
+                <span class="developer-credit">M Fadil Sanjaya<br>V 1.0.2 (fix hari)</span>
             </div>
         </div>
     </div>
@@ -833,7 +833,7 @@
                     <div class="admin-sec"><h4>Tambah Akun</h4><div style="display:grid; grid-template-columns:1fr 1fr 1fr 0.5fr; gap:8px;"><input id="newU" placeholder="User"><input id="newP" placeholder="Pass"><select id="newR"><option value="user">User</option><option value="admin">Admin</option></select><button class="btn-success" onclick="askAddUser()">Tambah</button></div></div>
                     <div class="admin-sec"><h4>Broadcast</h4><input id="bcMsgIn" placeholder="Pesan"><input id="bcLinkIn" placeholder="URL Link" style="margin-top:8px;"><button class="btn-primary" style="margin-top:12px;" onclick="askSetBC()">Update</button></div>
                     <div class="admin-sec"><h4>Berikan Penalti</h4><div style="display:grid; grid-template-columns:1fr 1fr 1fr 0.5fr; gap:8px;"><select id="penUser"></select><select id="penLvl"><option value="p-ringan">Ringan</option><option value="p-sedang">Sedang</option><option value="p-berat">Berat</option></select><input id="penNote" placeholder="Alasan"><button class="btn-danger" onclick="askSendPen()">Kirim</button></div></div>
-                    <div class="admin-sec"><h4>Riwayat Penalti</h4><div style="overflow-x:auto;"><table class="penalty-history-table"><thead><tr><th>No</th><th>Tanggal</th><th>Karyawan</th><th>Level</th><th>Alasan</th><th>Aksi</th></tr></thead><tbody id="penaltyHistoryList"></tbody></table></div></div>
+                    <div class="admin-sec"><h4>Riwayat Penalti</h4><div style="overflow-x:auto;"><table class="penalty-history-table"><thead>广<th>No</th><th>Tanggal</th><th>Karyawan</th><th>Level</th><th>Alasan</th><th>Aksi</th></tr></thead><tbody id="penaltyHistoryList"></tbody></table></div></div>
                 </div>
             </div>
             <!-- Data Karyawan -->
@@ -961,35 +961,27 @@ function normalizeString(str) { return (str || "").trim().toLowerCase(); }
 function parseDateToYMD(dateStr) {
     if (!dateStr) return null;
     dateStr = dateStr.trim();
-    // Jika sudah YYYY-MM-DD
     if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
-    
-    // Coba format dd/mm/yyyy atau mm/dd/yyyy
     let parts = dateStr.split('/');
     if (parts.length === 3) {
         let a = parseInt(parts[0], 10);
         let b = parseInt(parts[1], 10);
         let y = parseInt(parts[2], 10);
         if (isNaN(a) || isNaN(b) || isNaN(y) || y < 1000) return null;
-        // Deteksi: jika a > 12 dan b <= 12, kemungkinan a=hari, b=bulan
         if (a > 12 && b <= 12) {
             return `${y}-${b.toString().padStart(2,'0')}-${a.toString().padStart(2,'0')}`;
         }
-        // jika b > 12 dan a <= 12, kemungkinan a=bulan, b=hari
         if (b > 12 && a <= 12) {
             return `${y}-${a.toString().padStart(2,'0')}-${b.toString().padStart(2,'0')}`;
         }
-        // asumsikan dd/mm/yyyy
         return `${y}-${b.toString().padStart(2,'0')}-${a.toString().padStart(2,'0')}`;
     }
     return null;
 }
 
-// ========== FUNGSI FORMAT JAM KE HH:MM:SS (DARI BERBAGAI FORMAT) ==========
 function formatTimeTo24HMS(timeStr) {
     if (!timeStr) return "00:00:00";
     timeStr = timeStr.trim();
-    // Cek apakah mengandung AM/PM
     let lower = timeStr.toLowerCase();
     if (lower.includes('am') || lower.includes('pm')) {
         let [time, modifier] = timeStr.split(' ');
@@ -1000,14 +992,11 @@ function formatTimeTo24HMS(timeStr) {
         if (modifier === 'am' && hours === 12) hours = 0;
         return `${hours.toString().padStart(2,'0')}:${minutes}:${seconds}`;
     }
-    // Ganti titik dengan titik dua
     timeStr = timeStr.replace(/\./g, ':');
     let parts = timeStr.split(':');
     if (parts.length >= 2) {
         let hours = parseInt(parts[0], 10);
-        if (!isNaN(hours)) {
-            parts[0] = hours.toString().padStart(2,'0');
-        }
+        if (!isNaN(hours)) parts[0] = hours.toString().padStart(2,'0');
         if (parts.length === 2) parts.push("00");
         return parts.join(':');
     }
@@ -1387,7 +1376,6 @@ function refreshHistoryDisplay() {
         const end = historyEndFilter || "9999-12-31";
         filteredLogs = filteredLogs.filter(log => isDateInRange(log.tgl, start, end));
     }
-    // Urutkan berdasarkan tanggal YMD
     filteredLogs.sort((a, b) => {
         const aYMD = parseDateToYMD(a.tgl) || '';
         const bYMD = parseDateToYMD(b.tgl) || '';
@@ -1398,7 +1386,6 @@ function refreshHistoryDisplay() {
     let html = '';
     filteredLogs.forEach(l => {
         const dayName = getDayName(l.tgl);
-        // Tampilkan tanggal dalam format DD/MM/YYYY
         let displayDate = l.tgl;
         const ymd = parseDateToYMD(l.tgl);
         if (ymd) {
@@ -1434,7 +1421,6 @@ function refreshHistoryDisplay() {
             const detik = totalDetik % 60;
             formattedDurasi = `${jam.toString().padStart(2,'0')}:${menit.toString().padStart(2,'0')}:${detik.toString().padStart(2,'0')}`;
         }
-        // Format jam tampilan
         const masukDisplay = formatTimeTo24HMS(l.masuk);
         const keluarDisplay = formatTimeTo24HMS(l.keluar);
         html += `<tr>
@@ -1582,7 +1568,7 @@ async function saveEditedLog() {
     const timeIn = document.getElementById('editLogTimeIn').value + ':00';
     const timeOut = document.getElementById('editLogTimeOut').value + ':00';
     if (!dateInput) { alert('Tanggal harus diisi!'); return; }
-    const newTgl = dateInput; // YYYY-MM-DD
+    const newTgl = dateInput;
     const [inH, inM, inS] = timeIn.split(':').map(Number);
     const [outH, outM, outS] = timeOut.split(':').map(Number);
     let startSeconds = inH * 3600 + inM * 60 + inS;
@@ -1619,7 +1605,6 @@ function updateTimerDisplay(diffSec, rateTotalSec, rateRp) {
     const nominal = rateTotalSec > 0 ? (diffSec / rateTotalSec) * rateRp : 0;
     document.getElementById('liveMoney').innerText = "Rp " + Math.floor(nominal).toLocaleString('id-ID');
 }
-// ==================== stopWork (tetap asli, tapi kita konversi jam ke 24H saat simpan) ====================
 async function stopWork() {
     if (timerInt) { clearInterval(timerInt); timerInt = null; }
     localStorage.removeItem('workStartTime_' + currentUser.username);
@@ -1633,7 +1618,6 @@ async function stopWork() {
     const gajiRaw = document.getElementById('liveMoney').innerText;
     const gajiClean = gajiRaw.replace("Rp ", "").replace(/\./g, "").replace(/,/g, "").trim();
     if (startTime && dur !== "00:00:00") {
-        // Format jam 24 jam
         const formatTime24 = (date) => {
             const h = date.getHours().toString().padStart(2, '0');
             const m = date.getMinutes().toString().padStart(2, '0');
@@ -1695,7 +1679,6 @@ async function getActiveSessionFromCloud() { if (!currentUser) return null; try 
 async function forceStopThisDevice() {
     if (!currentUser || !startTime) return;
     if (timerInt) clearInterval(timerInt);
-    // Hanya reset state lokal, TIDAK menyimpan log (karena sudah disimpan oleh device yang melakukan stop manual)
     startTime = null;
     localStorage.removeItem('workStartTime_' + currentUser.username);
     await updateEmpStatus("offline");
@@ -1709,7 +1692,46 @@ async function forceStopThisDevice() {
     updateUserStatusBadge();
     showToast('⛔ Pekerjaan DIHENTIKAN dari device lain!\nKlik MULAI untuk mulai dari awal');
 }
-async function syncTimerFromCloud() { if (!currentUser) return; try { const cloudSession = await getActiveSessionFromCloud(); const isLocalActive = (startTime !== null && startTime !== undefined); if (cloudSession && !isLocalActive) { startTime = cloudSession.startTime; localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString()); await updateEmpStatus("aktif"); await updateGlobalEmployeeStatus(currentUser.username, "aktif"); document.getElementById('btnIn').disabled = true; document.getElementById('btnOut').disabled = false; updateUserStatusBadge(); const rateRp = Number(currentUser.rP); const rateTotalSec = (Number(currentUser.rH) * 3600) + (Number(currentUser.rM) * 60) + Number(currentUser.rS); if (timerInt) clearInterval(timerInt); timerInt = setInterval(() => { if (!startTime) return; const diffSec = Math.floor((new Date() - startTime) / 1000); updateTimerDisplay(diffSec, rateTotalSec, rateRp); }, 1000); const elapsedSeconds = Math.floor((new Date() - startTime) / 1000); updateTimerDisplay(elapsedSeconds, rateTotalSec, rateRp); showToast('🔄 Sesi dipulihkan dari device lain'); return; } if (isLocalActive && !cloudSession) { const currentStatus = await fetch(DB_URL).then(r => r.json()).then(d => d?.employeeStatus?.[currentUser.username]?.status); if (currentStatus === 'aktif') await forceStopThisDevice(); return; } if (cloudSession && isLocalActive) { const remoteStartTime = cloudSession.startTime; const diffMs = Math.abs(remoteStartTime - startTime); if (diffMs > 2000) { startTime = remoteStartTime; localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString()); } } } catch(e) { console.error("Sync error:", e); } }
+async function syncTimerFromCloud() { 
+    if (!currentUser) return; 
+    try { 
+        const cloudSession = await getActiveSessionFromCloud(); 
+        const isLocalActive = (startTime !== null && startTime !== undefined); 
+        if (cloudSession && !isLocalActive) { 
+            startTime = cloudSession.startTime; 
+            localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString()); 
+            await updateEmpStatus("aktif"); 
+            await updateGlobalEmployeeStatus(currentUser.username, "aktif"); 
+            document.getElementById('btnIn').disabled = true; 
+            document.getElementById('btnOut').disabled = false; 
+            updateUserStatusBadge(); 
+            const rateRp = Number(currentUser.rP); 
+            const rateTotalSec = (Number(currentUser.rH) * 3600) + (Number(currentUser.rM) * 60) + Number(currentUser.rS); 
+            if (timerInt) clearInterval(timerInt); 
+            timerInt = setInterval(() => { 
+                if (!startTime) return; 
+                const diffSec = Math.floor((new Date() - startTime) / 1000); 
+                updateTimerDisplay(diffSec, rateTotalSec, rateRp); 
+            }, 1000); 
+            const elapsedSeconds = Math.floor((new Date() - startTime) / 1000); 
+            updateTimerDisplay(elapsedSeconds, rateTotalSec, rateRp); 
+            showToast('🔄 Sesi dipulihkan dari device lain'); 
+            return; 
+        } 
+        if (isLocalActive && !cloudSession) { 
+            await forceStopThisDevice(); 
+            return; 
+        } 
+        if (cloudSession && isLocalActive) { 
+            const remoteStartTime = cloudSession.startTime; 
+            const diffMs = Math.abs(remoteStartTime - startTime); 
+            if (diffMs > 2000) { 
+                startTime = remoteStartTime; 
+                localStorage.setItem('workStartTime_' + currentUser.username, startTime.toISOString()); 
+            } 
+        } 
+    } catch(e) { console.error("Sync error:", e); } 
+}
 function startRealTimeCloudSync() { if (realTimeSyncInterval) clearInterval(realTimeSyncInterval); realTimeSyncInterval = setInterval(() => { syncTimerFromCloud(); }, 1000); }
 function stopRealTimeCloudSync() { if (realTimeSyncInterval) { clearInterval(realTimeSyncInterval); realTimeSyncInterval = null; } }
 async function sessionHeartbeatToCloud() { if (!currentUser) return; try { const currentStatus = await fetch(DB_URL).then(r => r.json()).then(d => d?.employeeStatus?.[currentUser.username]?.status); if (currentStatus === 'aktif' && startTime) await saveActiveSessionToCloud(); } catch(e) { console.error("Heartbeat error:", e); } }
